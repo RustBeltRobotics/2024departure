@@ -53,6 +53,8 @@ public final class Constants {
      */
     public static final double DRIVETRAIN_WHEELBASE_METERS = 0.47;
 
+    public static final double DRIVETRAIN_BASE_RADIUS = Math.hypot(DRIVETRAIN_TRACKWIDTH_METERS, DRIVETRAIN_WHEELBASE_METERS) / 2;
+
     /**
      * Creates a swerve kinematics object, to convert desired chassis velocity into
      * individual module states
@@ -109,7 +111,7 @@ public final class Constants {
      */
     public static final double MAX_TRAJECTORY_ACCELERATION = 2.;
 
-    /** Max velocity while following a balance auto trajectory. Meters per second */
+    /** Max velocity while following balance auto trajectory. Meters per second */
     public static final double MAX_BALANCE_TRAJECTORY_VELOCITY = 3.;
 
     // FIXME: Do we actually use these??

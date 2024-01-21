@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -13,6 +14,9 @@ import frc.robot.subsystems.Drivetrain;
 import static frc.robot.Constants.*;
 import static frc.robot.Utilities.*;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 /**
  * This class is where the bulk of the robot should be declared. Since
  * Command-based is a "declarative" paradigm, very little robot logic should
@@ -21,6 +25,7 @@ import static frc.robot.Utilities.*;
  * commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+    
     // The robot's subsystems are defined here
     public static final Drivetrain drivetrain = new Drivetrain();
 
@@ -67,8 +72,11 @@ public class RobotContainer {
     }
 
     public void configureAutos() {
-        autoChooser.setDefaultOption("Do nothing", new WaitCommand(1.));
+        //autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Chooser", autoChooser);
     }
+
+    
 
     /**
      * This method returns the autonomous routine that will be run at the start of
@@ -81,7 +89,8 @@ public class RobotContainer {
      * @return The autonomous routine that will be run
      */
     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
+        //return autoChooser.getSelected();
+        return new PathPlannerAuto("New Auto");
     }
 
     public void speedUp() {

@@ -1,6 +1,11 @@
 package frc.robot.subsystems;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
+
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -8,13 +13,16 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 import static frc.robot.Constants.*;
 
 public class Drivetrain extends SubsystemBase {
+
     // NavX connected over MXP
     public final AHRS navx;
 
@@ -30,6 +38,14 @@ public class Drivetrain extends SubsystemBase {
     private final SwerveModule backLeftModule;
     private final SwerveModule backRightModule;
 
+    private double translation_P = 10.0;
+    private double translation_I = 0.0;
+    private double translation_D = 0.0;
+
+    private double rotation_P = 5.0;
+    private double rotation_I = 0.0;
+    private double rotation_D = 0.0;
+
     // The speed of the robot in x and y translational velocities and rotational velocity
     private ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
@@ -39,6 +55,34 @@ public class Drivetrain extends SubsystemBase {
     private final SwerveDrivePoseEstimator poseEstimator;
 
     public Drivetrain() {
+
+         // Configure AutoBuilder last
+        AutoBuilder.configureHolonomic(
+                this::getPose, // Robot pose supplier
+                this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                this::drive, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+                        new PIDConstants(translation_P, translation_I, translation_D), // Translation PID constants
+                        new PIDConstants(rotation_P, rotation_I, rotation_D), // Rotation PID constants
+                        Constants.MAX_VELOCITY_METERS_PER_SECOND, // Max module speed, in m/s
+                        Constants.DRIVETRAIN_BASE_RADIUS, // Drive base radius in meters. Distance from robot center to furthest module.
+                        new ReplanningConfig() //TODO: check on this function
+                ),
+                () -> {
+                    // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    // This will flip the path being followed to the red side of the field.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
+
         // Initialize all modules
         backRightModule = new SwerveModule(
                 BACK_RIGHT_MODULE_DRIVE_MOTOR,
@@ -124,7 +168,7 @@ public class Drivetrain extends SubsystemBase {
         };
     }
 
-    public void resetOdometry(Pose2d pose) {
+    public void resetPose(Pose2d pose) {
         poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), pose);
     }
 
@@ -134,6 +178,10 @@ public class Drivetrain extends SubsystemBase {
 
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds(){
+        return chassisSpeeds;
     }
 
     public void setModuleStates(SwerveModuleState[] states) {
@@ -194,5 +242,12 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putNumber("Back Left Absolute", backLeftModule.getAbsolutePosition());
         SmartDashboard.putNumber("Back Right Absolute", backRightModule.getAbsolutePosition());
         SmartDashboard.putNumber("Gyro", getGyroscopeAngle());
+
+        translation_P = SmartDashboard.getNumber("translationP", translation_P);
+        translation_I = SmartDashboard.getNumber("translationI", translation_I);
+        translation_D = SmartDashboard.getNumber("translationD", translation_D);
+        rotation_P = SmartDashboard.getNumber("rotationP", rotation_P);
+        rotation_I = SmartDashboard.getNumber("rotationI", rotation_I);
+        rotation_D = SmartDashboard.getNumber("rotationD", rotation_D);
     }
 }
