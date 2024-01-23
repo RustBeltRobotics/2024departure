@@ -7,14 +7,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.commands.AprilTagAimCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.subsystems.Drivetrain;
 
 import static frc.robot.Constants.*;
 import static frc.robot.Utilities.*;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 /**
@@ -64,6 +63,8 @@ public class RobotContainer {
         new Trigger(driverController::getAButton).onTrue(new InstantCommand(() -> drivetrain.zeroGyroscope()));
         // Pressing Y button locks the wheels in an X pattern
         new Trigger(driverController::getYButton).onTrue(new InstantCommand(() -> drivetrain.toggleWheelsLocked()));
+        // Pressing B button rotates bot to face apriltag
+        new Trigger(driverController::getBButton).onTrue(new AprilTagAimCommand(drivetrain, "speaker"));
         // Pressing the Right Bumper shifts to high speed
         new Trigger(driverController::getRightBumper).onTrue(new InstantCommand(() -> speedUp()));
         // Pressing the Left Bumper shifts to low speed
