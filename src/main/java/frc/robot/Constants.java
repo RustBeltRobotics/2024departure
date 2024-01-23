@@ -114,11 +114,14 @@ public final class Constants {
     /** Max velocity while following balance auto trajectory. Meters per second */
     public static final double MAX_BALANCE_TRAJECTORY_VELOCITY = 3.;
 
-    // FIXME: Do we actually use these??
-    public static final double TRAJECTORY_TRANSLATION_P = 2.;
-    public static final double TRAJECTORY_ROTATION_P = 2.;
-    public static final double POSE_TRANSLATION_P = 3.5;
-    public static final double POSE_ROTATION_P = 0.1;
+    // PID Constants for translation and rotation moves
+    public static final double translation_P = 10.0;
+    public static final double translation_I = 0.0;
+    public static final double translation_D = 0.0;
+
+    public static final double rotation_P = 5.0;
+    public static final double rotation_I = 0.0;
+    public static final double rotation_D = 0.0;
 
     // FIXME: All CAN ID's will need to be programmed into the hardware, so we can
     // change these if we want. Personally, I would recommend moving to a more
@@ -149,4 +152,8 @@ public final class Constants {
     public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -246.09 + 180.;
     public static final double BACK_LEFT_MODULE_STEER_OFFSET = -288.37 + 180.;
     public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -345.23 + 180.;
+
+    //Limelight/vision
+    public static final String limelightName = "limelight";
+
 }

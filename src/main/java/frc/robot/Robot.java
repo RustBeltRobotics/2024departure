@@ -1,8 +1,10 @@
 package frc.robot;
 
+import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -31,6 +33,10 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         robotContainer = new RobotContainer();
+
+        for (int port = 5800; port <= 5807; port++) {
+            PortForwarder.add(port, "limelight.local", port);
+        }
     }
 
     /**
@@ -74,8 +80,7 @@ public class Robot extends TimedRobot {
 
     /** This function is called periodically during operator control. */
     @Override
-    public void teleopPeriodic() {
-    }
+    public void teleopPeriodic() {}
 
     /** This function is called once when the robot is disabled. */
     @Override

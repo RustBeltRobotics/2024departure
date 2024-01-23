@@ -15,9 +15,11 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.LimelightHelpers;
 
 import static frc.robot.Constants.*;
 
@@ -37,14 +39,6 @@ public class Drivetrain extends SubsystemBase {
     private final SwerveModule frontRightModule;
     private final SwerveModule backLeftModule;
     private final SwerveModule backRightModule;
-
-    private double translation_P = 10.0;
-    private double translation_I = 0.0;
-    private double translation_D = 0.0;
-
-    private double rotation_P = 5.0;
-    private double rotation_I = 0.0;
-    private double rotation_D = 0.0;
 
     // The speed of the robot in x and y translational velocities and rotational velocity
     private ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
@@ -212,6 +206,26 @@ public class Drivetrain extends SubsystemBase {
      */
     @Override
     public void periodic() {
+        var alliance = DriverStation.getAlliance();
+        Pose2d visionPose2d;
+        if (alliance.isPresent()) {
+            if (alliance.get() == DriverStation.Alliance.Red) {
+                visionPose2d = LimelightHelpers.getBotPose2d_wpiRed(limelightName);
+            } else {
+                visionPose2d = LimelightHelpers.getBotPose2d_wpiBlue(limelightName);
+            }
+        } else {
+            visionPose2d = LimelightHelpers.getBotPose2d(limelightName);
+        }
+
+        double totalVisionLatencyMs = LimelightHelpers.getLatency_Capture(limelightName);
+        totalVisionLatencyMs += LimelightHelpers.getLatency_Pipeline(limelightName);
+
+        double poseReadingTimestamp = Timer.getFPGATimestamp() - (totalVisionLatencyMs / 1000.0);
+        
+		//TODO: add condition to only add vision measurement if we think it's "valid"
+        poseEstimator.addVisionMeasurement(visionPose2d, poseReadingTimestamp);
+
         // Convert from ChassisSpeeds to SwerveModuleStates
         SwerveModuleState[] states = KINEMATICS.toSwerveModuleStates(chassisSpeeds);
         // Make sure no modules are being commanded to velocites greater than the max
@@ -242,12 +256,5 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putNumber("Back Left Absolute", backLeftModule.getAbsolutePosition());
         SmartDashboard.putNumber("Back Right Absolute", backRightModule.getAbsolutePosition());
         SmartDashboard.putNumber("Gyro", getGyroscopeAngle());
-
-        translation_P = SmartDashboard.getNumber("translationP", translation_P);
-        translation_I = SmartDashboard.getNumber("translationI", translation_I);
-        translation_D = SmartDashboard.getNumber("translationD", translation_D);
-        rotation_P = SmartDashboard.getNumber("rotationP", rotation_P);
-        rotation_I = SmartDashboard.getNumber("rotationI", rotation_I);
-        rotation_D = SmartDashboard.getNumber("rotationD", rotation_D);
     }
 }
