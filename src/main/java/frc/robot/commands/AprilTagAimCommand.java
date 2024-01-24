@@ -4,27 +4,40 @@ import static frc.robot.Constants.limelightName;
 import static frc.robot.Constants.rotation_P;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+
 import frc.robot.LimelightHelpers;
 import frc.robot.subsystems.Drivetrain;
-    public class AprilTagAimCommand extends Command {
+
+public class AprilTagAimCommand extends Command {
     private double tx;
     private String target;
     private double sightedTID;
     private double targetTID;
     private double targetTID2 = -1;
     private double steeringAdjust; 
+    private DoubleSupplier stickX;
+    private DoubleSupplier stickY;
+    private boolean finished;
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
     private final Drivetrain drivetrain;
-    public AprilTagAimCommand(Drivetrain drivetrain, String target) {
+    public AprilTagAimCommand(Drivetrain drivetrain, String target, DoubleSupplier stickX, DoubleSupplier stickY) {
         this.drivetrain = drivetrain;
         this.target = target;
+        this.stickX = stickX;
+        this.stickY = stickY;
         addRequirements(drivetrain);
+    }
+    @Override
+    public void initialize() {
+        finished = false;
     }
     @Override
     public void execute() {
@@ -65,13 +78,19 @@ import frc.robot.subsystems.Drivetrain;
             tx = LimelightHelpers.getTX(limelightName);
             steeringAdjust = rotation_P * tx;
             drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                0,
-                0,
+                stickX.getAsDouble(),
+                stickY.getAsDouble(),
                 steeringAdjust,
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
         }
+        finished = true;
     }
     @Override
-    public void end(boolean interrupted) {
+    public boolean isFinished() {
+        if (finished == true){
+            return true;
+        } else {
+            return false;
+        }
     }
 }
