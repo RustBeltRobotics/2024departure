@@ -208,6 +208,7 @@ public class Drivetrain extends SubsystemBase {
     public void periodic() {
         var alliance = DriverStation.getAlliance();
         Pose2d visionPose2d;
+        
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 visionPose2d = LimelightHelpers.getBotPose2d_wpiRed(limelightName);
@@ -223,8 +224,12 @@ public class Drivetrain extends SubsystemBase {
 
         double poseReadingTimestamp = Timer.getFPGATimestamp() - (totalVisionLatencyMs / 1000.0);
         
-		//TODO: add condition to only add vision measurement if we think it's "valid"
-        poseEstimator.addVisionMeasurement(visionPose2d, poseReadingTimestamp);
+		double poseDifference = poseEstimator.getEstimatedPosition().getTranslation()
+        .getDistance(visionPose2d.getTranslation());
+
+        if (visionPose2d.getX() != 0.0 && poseDifference < 0.5) {
+            poseEstimator.addVisionMeasurement(visionPose2d, poseReadingTimestamp);
+        }      
 
         // Convert from ChassisSpeeds to SwerveModuleStates
         SwerveModuleState[] states = KINEMATICS.toSwerveModuleStates(chassisSpeeds);
