@@ -24,7 +24,6 @@ public class AprilTagAimCommand extends Command {
     private double steeringAdjust; 
     private DoubleSupplier stickX;
     private DoubleSupplier stickY;
-    private boolean finished;
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
     private final Drivetrain drivetrain;
@@ -34,10 +33,6 @@ public class AprilTagAimCommand extends Command {
         this.stickX = stickX;
         this.stickY = stickY;
         addRequirements(drivetrain);
-    }
-    @Override
-    public void initialize() {
-        finished = false;
     }
     @Override
     public void execute() {
@@ -83,14 +78,9 @@ public class AprilTagAimCommand extends Command {
                 steeringAdjust,
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
         }
-        finished = true;
     }
     @Override
-    public boolean isFinished() {
-        if (finished == true){
-            return true;
-        } else {
-            return false;
-        }
+    public void end(boolean interrupted) {
+        drivetrain.drive(new ChassisSpeeds(0, 0, 0));
     }
 }
