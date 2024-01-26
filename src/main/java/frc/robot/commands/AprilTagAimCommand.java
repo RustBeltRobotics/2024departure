@@ -72,13 +72,20 @@ public class AprilTagAimCommand extends Command {
         //determine if the primary tag id matches our target tag id
         sightedTID = LimelightHelpers.getFiducialID(limelightName);
         if (sightedTID == targetTID || sightedTID == targetTID2) {
-            System.out.println("execute inside if statement");
+            System.out.println("running pid turn");
             tx = LimelightHelpers.getTX(limelightName);
             steeringAdjust = rotation_P * tx;
             drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble(),
                 stickY.getAsDouble(),
                 steeringAdjust,
+                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
+        } else { // just normal drive with no rotation
+            System.out.println("no valid TID");
+            drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                stickX.getAsDouble(),
+                stickY.getAsDouble(),
+                0,
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
         }
         System.out.println("end of execute");
