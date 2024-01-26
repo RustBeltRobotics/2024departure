@@ -64,7 +64,7 @@ public class RobotContainer {
         // Pressing Y button locks the wheels in an X pattern
         new Trigger(driverController::getYButton).onTrue(new InstantCommand(() -> drivetrain.toggleWheelsLocked()));
         // Pressing B button rotates bot to face apriltag
-        new Trigger(driverController::getBButton).onTrue(new AprilTagAimCommand(drivetrain,
+        new Trigger(driverController::getBButton).whileTrue(new AprilTagAimCommand(drivetrain,
                 "speaker",
                 () -> -modifyAxis(driverController.getLeftY()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor, 
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor));

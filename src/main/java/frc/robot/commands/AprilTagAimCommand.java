@@ -36,6 +36,7 @@ public class AprilTagAimCommand extends Command {
     }
     @Override
     public void execute() {
+        System.out.println("execute start");
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 switch (target) {
@@ -67,9 +68,11 @@ public class AprilTagAimCommand extends Command {
                     break;
                 }
         }
+        System.out.println("execute after switch, " + stickX.getAsDouble() + " " + stickY.getAsDouble());
         //determine if the primary tag id matches our target tag id
         sightedTID = LimelightHelpers.getFiducialID(limelightName);
         if (sightedTID == targetTID || sightedTID == targetTID2) {
+            System.out.println("execute inside if statement");
             tx = LimelightHelpers.getTX(limelightName);
             steeringAdjust = rotation_P * tx;
             drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -78,9 +81,11 @@ public class AprilTagAimCommand extends Command {
                 steeringAdjust,
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
         }
+        System.out.println("end of execute");
     }
     @Override
     public void end(boolean interrupted) {
-        drivetrain.drive(new ChassisSpeeds(0, 0, 0));
+        System.out.println("end starting");
+        drivetrain.drive(new ChassisSpeeds(stickX.getAsDouble(), stickY.getAsDouble(), 0));
     }
 }
