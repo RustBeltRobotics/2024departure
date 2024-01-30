@@ -1,15 +1,21 @@
 package frc.robot.commands;
 
+import static frc.robot.Constants.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND;
+import static frc.robot.Constants.STEER_D;
+import static frc.robot.Constants.STEER_I;
+import static frc.robot.Constants.STEER_P;
 import static frc.robot.Constants.limelightName;
 import static frc.robot.Constants.rotation_P;
 
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 import frc.robot.LimelightHelpers;
@@ -34,6 +40,8 @@ public class AprilTagAimCommand extends Command {
         this.stickY = stickY;
         addRequirements(drivetrain);
     }
+    private final PIDController steerPID = new PIDController(.13, .13, .01);
+    
     @Override
     public void execute() {
         System.out.println("execute start");
@@ -72,9 +80,12 @@ public class AprilTagAimCommand extends Command {
         //determine if the primary tag id matches our target tag id
         sightedTID = LimelightHelpers.getFiducialID(limelightName);
         if (sightedTID == targetTID || sightedTID == targetTID2) {
-            System.out.println("running pid turn");
+            // Allow PID to loop over
+            steerPID.enableContinuousInput(0., 360.);
             tx = LimelightHelpers.getTX(limelightName);
-            steeringAdjust = rotation_P * tx;
+            steeringAdjust = steerPID.calculate(tx);
+            SmartDashboard.putNumber("steringadjust",steeringAdjust);
+            SmartDashboard.putNumber("tx",tx);
             drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble(),
                 stickY.getAsDouble(),
