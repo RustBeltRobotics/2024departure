@@ -155,5 +155,6 @@ public final class Constants {
 
     //Limelight/vision
     public static final String limelightName = "limelight";
+    public static final double speedLimit = 1.0;
 
 }
