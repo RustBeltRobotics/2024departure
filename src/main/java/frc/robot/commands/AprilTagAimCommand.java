@@ -7,13 +7,16 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-
 import frc.robot.LimelightHelpers;
 import frc.robot.subsystems.Drivetrain;
 
@@ -28,6 +31,17 @@ public class AprilTagAimCommand extends Command {
     private DoubleSupplier stickY;
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
+    private ShuffleboardTab tab = Shuffleboard.getTab("SmartDashboard");
+    private GenericEntry kS =
+      tab.add("kS", 0.0)
+         .getEntry();
+    private GenericEntry kV =
+      tab.add("kV", 0.0)
+         .getEntry();
+    private GenericEntry kA =
+      tab.add("kA", 0.0)
+         .getEntry();
+
     private final Drivetrain drivetrain;
     public AprilTagAimCommand(Drivetrain drivetrain, String target, DoubleSupplier stickX, DoubleSupplier stickY) {
         this.drivetrain = drivetrain;
@@ -37,6 +51,7 @@ public class AprilTagAimCommand extends Command {
         addRequirements(drivetrain);
     }
     private final PIDController steerPID = new PIDController(.13, .13, .01);
+    private final SimpleMotorFeedforward steerFeedforward = new SimpleMotorFeedforward(kS.getDouble(0.0), kV.getDouble(0.0), kA.getDouble(0.0));
     
     @Override
     public void execute() {
@@ -76,7 +91,7 @@ public class AprilTagAimCommand extends Command {
         if (sightedTID == targetTID || sightedTID == targetTID2) {
             steerPID.enableContinuousInput(0.0, 360.0);
             tx = LimelightHelpers.getTX(limelightName);
-            steeringAdjust = steerPID.calculate(tx);
+            steeringAdjust = steerPID.calculate(tx) + steerFeedforward.calculate(steerPID.getSetpoint());
 
             drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble()*speedLimit,

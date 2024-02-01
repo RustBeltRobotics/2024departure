@@ -9,6 +9,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static frc.robot.Constants.*;
 
@@ -120,6 +121,8 @@ public class SwerveModule {
         state = SwerveModuleState.optimize(state, getState().angle);
         driveMotor.set(state.speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND);
         steerMotor.set(steerPID.calculate(getSteerPosition(), state.angle.getDegrees()));
+        SmartDashboard.putNumber("rotation speed", steerPID.calculate(getSteerPosition(), state.angle.getDegrees()));
+
     }
 
     /**
