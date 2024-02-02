@@ -19,7 +19,7 @@ public class SwerveModule {
 
     private SparkPIDController drivePidController;
     private SparkPIDController steerPidController;
-    public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput;
+    public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, steer_kFF;
 
     private final RelativeEncoder driveEncoder;
     private final RelativeEncoder steerEncoder;
@@ -65,14 +65,17 @@ public class SwerveModule {
         // Zero encoders to ensure steer relative matches absolute
         resetEncoders();
 
-        // PID coefficients
-        kP = 0.1; 
-        kI = 1e-4;
-        kD = 1; 
+        // PID coefficients (drive)
+        kP = 6e-5; 
+        kI = 0;
+        kD = 0; 
         kIz = 0; 
-        kFF = 0; 
+        kFF = 0.000015; 
         kMaxOutput = 1; 
         kMinOutput = -1;
+
+        // PID coefficients (steer)
+        steer_kFF = 0.0; 
 
         // set PID coefficients (drive)
         drivePidController.setP(kP);
@@ -87,7 +90,7 @@ public class SwerveModule {
         steerPidController.setI(STEER_I);
         steerPidController.setD(STEER_D);
         steerPidController.setIZone(kIz);
-        steerPidController.setFF(kFF);
+        steerPidController.setFF(steer_kFF);
         steerPidController.setOutputRange(kMinOutput, kMaxOutput);
     }
 
@@ -174,7 +177,8 @@ public class SwerveModule {
         double i = SmartDashboard.getNumber("Drive I Gain", 0);
         double d = SmartDashboard.getNumber("Drive D Gain", 0);
         double iz = SmartDashboard.getNumber("I Zone", 0);
-        double ff = SmartDashboard.getNumber("Feed Forward", 0);
+        double dff = SmartDashboard.getNumber("Drive Feed Forward", 0);
+        double sff = SmartDashboard.getNumber("Steer Feed Forward", 0);
         double max = SmartDashboard.getNumber("Max Output", 0);
         double min = SmartDashboard.getNumber("Min Output", 0);
 
@@ -183,13 +187,13 @@ public class SwerveModule {
         if((i != kI)) { drivePidController.setI(i); kI = i; }
         if((d != kD)) { drivePidController.setD(d); kD = d; }
         if((iz != kIz)) { drivePidController.setIZone(iz); kIz = iz; }
-        if((ff != kFF)) { drivePidController.setFF(ff); kFF = ff; }
+        if((dff != kFF)) { drivePidController.setFF(dff); kFF = dff; }
         if((max != kMaxOutput) || (min != kMinOutput)) { 
             drivePidController.setOutputRange(min, max); 
             kMinOutput = min; kMaxOutput = max;
         }
         if((iz != kIz)) { steerPidController.setIZone(iz); kIz = iz; }
-        if((ff != kFF)) { steerPidController.setFF(ff); kFF = ff; }
+        if((sff != steer_kFF)) { steerPidController.setFF(sff); steer_kFF = sff; }
         if((max != kMaxOutput) || (min != kMinOutput)) { 
             steerPidController.setOutputRange(min, max); 
             kMinOutput = min; kMaxOutput = max;
