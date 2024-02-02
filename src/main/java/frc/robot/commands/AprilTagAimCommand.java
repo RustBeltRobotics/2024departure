@@ -33,14 +33,16 @@ public class AprilTagAimCommand extends Command {
 
     private ShuffleboardTab tab = Shuffleboard.getTab("SmartDashboard");
     private GenericEntry kS =
-      tab.add("kS", 0.0)
+      tab.add("kS", 0.1)
          .getEntry();
     private GenericEntry kV =
-      tab.add("kV", 0.0)
+      tab.add("kV", 1.0)
          .getEntry();
     private GenericEntry kA =
       tab.add("kA", 0.0)
          .getEntry();
+
+
 
     private final Drivetrain drivetrain;
     public AprilTagAimCommand(Drivetrain drivetrain, String target, DoubleSupplier stickX, DoubleSupplier stickY) {
@@ -51,10 +53,12 @@ public class AprilTagAimCommand extends Command {
         addRequirements(drivetrain);
     }
     private final PIDController steerPID = new PIDController(.13, .13, .01);
-    private final SimpleMotorFeedforward steerFeedforward = new SimpleMotorFeedforward(kS.getDouble(0.0), kV.getDouble(0.0), kA.getDouble(0.0));
+    
     
     @Override
     public void execute() {
+        System.out.println("execute start");
+        final SimpleMotorFeedforward steerFeedforward = new SimpleMotorFeedforward(kS.getDouble(0.0), kV.getDouble(0.0), kA.getDouble(0.0));
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 switch (target) {
@@ -91,28 +95,28 @@ public class AprilTagAimCommand extends Command {
         if (sightedTID == targetTID || sightedTID == targetTID2) {
             steerPID.enableContinuousInput(0.0, 360.0);
             tx = LimelightHelpers.getTX(limelightName);
-            steeringAdjust = steerPID.calculate(tx) + steerFeedforward.calculate(steerPID.getSetpoint());
-
-            drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+            steeringAdjust = steerPID.calculate(tx);
+            ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble()*speedLimit,
                 stickY.getAsDouble()*speedLimit,
                 steeringAdjust,
-                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
-
+                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset()));
+            
+            drivetrain.drive(ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.020));
             SmartDashboard.putNumber("steringadjust",steeringAdjust);
             SmartDashboard.putNumber("tx",tx);
         } else { // just normal drive with no rotation
             SmartDashboard.putString("steeringadjust", "no valid TID");
-            drivetrain.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+            drivetrain.drive(ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble(),
                 stickY.getAsDouble(),
                 0,
-                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())));
+                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())), 0.020));
         }
     }
     @Override
     public void end(boolean interrupted) {
-        System.out.println("end starting");
+        System.out.println("interupted");
         drivetrain.drive(new ChassisSpeeds(stickX.getAsDouble(), stickY.getAsDouble(), 0));
     }
 }
