@@ -19,7 +19,7 @@ public class SwerveModule {
 
     private SparkPIDController drivePidController;
     private SparkPIDController steerPidController;
-    public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, steer_kFF;
+    public double kP, kI, kD, kIz, drive_kFF, kMaxOutput, kMinOutput, steer_kFF;
 
     private final RelativeEncoder driveEncoder;
     private final RelativeEncoder steerEncoder;
@@ -65,14 +65,16 @@ public class SwerveModule {
         // Zero encoders to ensure steer relative matches absolute
         resetEncoders();
 
-        // PID coefficients (drive)
+        // PID coefficients
         kP = 6e-5; 
         kI = 0;
         kD = 0; 
         kIz = 0; 
-        kFF = 0.000015; 
         kMaxOutput = 1; 
         kMinOutput = -1;
+        
+        // PID coefficients (drive)
+        drive_kFF = 0.000015; 
 
         // PID coefficients (steer)
         steer_kFF = 0.0; 
@@ -82,7 +84,7 @@ public class SwerveModule {
         drivePidController.setI(kI);
         drivePidController.setD(kD);
         drivePidController.setIZone(kIz);
-        drivePidController.setFF(kFF);
+        drivePidController.setFF(drive_kFF);
         drivePidController.setOutputRange(kMinOutput, kMaxOutput);
 
         // set PID coefficients (steer)
@@ -187,7 +189,7 @@ public class SwerveModule {
         if((i != kI)) { drivePidController.setI(i); kI = i; }
         if((d != kD)) { drivePidController.setD(d); kD = d; }
         if((iz != kIz)) { drivePidController.setIZone(iz); kIz = iz; }
-        if((dff != kFF)) { drivePidController.setFF(dff); kFF = dff; }
+        if((dff != drive_kFF)) { drivePidController.setFF(dff); drive_kFF = dff; }
         if((max != kMaxOutput) || (min != kMinOutput)) { 
             drivePidController.setOutputRange(min, max); 
             kMinOutput = min; kMaxOutput = max;
