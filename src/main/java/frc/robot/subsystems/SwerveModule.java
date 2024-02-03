@@ -156,6 +156,7 @@ public class SwerveModule {
         state = SwerveModuleState.optimize(state, getState().angle);
         drivePidController.setReference(state.speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND, CANSparkMax.ControlType.kDutyCycle);
         steerPidController.setReference(state.angle.getDegrees(), CANSparkMax.ControlType.kPosition);
+        System.out.println("sms - " + state.toString());
     }
 
     /**
