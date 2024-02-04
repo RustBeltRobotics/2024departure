@@ -4,6 +4,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -66,7 +67,7 @@ public class SwerveModule {
         resetEncoders();
 
         // PID coefficients
-        kP = 6e-5; 
+        kP = 7e-5; 
         kI = 0;
         kD = 0; 
         kIz = 0; 
@@ -77,7 +78,7 @@ public class SwerveModule {
         drive_kFF = 0.000015; 
 
         // PID coefficients (steer)
-        steer_kFF = 0.0; 
+        steer_kFF = 0.0;
 
         // set PID coefficients (drive)
         drivePidController.setP(kP);
@@ -86,6 +87,7 @@ public class SwerveModule {
         drivePidController.setIZone(kIz);
         drivePidController.setFF(drive_kFF);
         drivePidController.setOutputRange(kMinOutput, kMaxOutput);
+        drivePidController.setPositionPIDWrappingEnabled(true);
 
         // set PID coefficients (steer)
         steerPidController.setP(STEER_P);
@@ -94,6 +96,7 @@ public class SwerveModule {
         steerPidController.setIZone(kIz);
         steerPidController.setFF(steer_kFF);
         steerPidController.setOutputRange(kMinOutput, kMaxOutput);
+        steerPidController.setPositionPIDWrappingEnabled(true);
     }
 
     /** @return Drive position, meters, -inf to +inf */
@@ -155,8 +158,8 @@ public class SwerveModule {
         }
         state = SwerveModuleState.optimize(state, getState().angle);
         drivePidController.setReference(state.speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND, CANSparkMax.ControlType.kDutyCycle);
-        steerPidController.setReference(state.angle.getDegrees(), CANSparkMax.ControlType.kPosition);
-        System.out.println("sms - " + state.toString());
+        setSparkAngle(state.angle.getDegrees());
+        SmartDashboard.putNumber("sate angle", state.angle.getDegrees());
     }
 
     /**
@@ -172,6 +175,24 @@ public class SwerveModule {
     public void stopModule() {
         driveMotor.set(0.);
         steerMotor.set(0.);
+    }
+    public void setSparkAngle(double targetAngleInDegrees){
+        double currentSparkAngle = steerMotor.getEncoder().getPosition();
+        double sparkRelativeTargetAngle = reboundValue(targetAngleInDegrees, currentSparkAngle);
+        steerPidController.setReference(sparkRelativeTargetAngle, ControlType.kPosition);
+        System.out.println(sparkRelativeTargetAngle);
+        SmartDashboard.putNumber("commanded angle",targetAngleInDegrees);
+    }
+    public double reboundValue(double value, double anchor){
+        double lowerBound = anchor - 180;
+        double upperBound = anchor + 180;
+
+        if (value < lowerBound){
+            value = lowerBound + ((value-lowerBound)%(upperBound - lowerBound));
+        } else if (value > upperBound){
+            value = lowerBound + ((value - upperBound)%(upperBound - lowerBound));
+        }
+        return value;
     }
 
     public void updatePidValues() {

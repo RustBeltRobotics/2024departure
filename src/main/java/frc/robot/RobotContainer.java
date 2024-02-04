@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.AprilTagAimCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
+import frc.robot.commands.RobotOrientedDriveCommand;
 import frc.robot.subsystems.Drivetrain;
 
 import static frc.robot.Constants.*;
@@ -45,12 +46,12 @@ public class RobotContainer {
         // Left stick Y axis -> forward and backwards movement
         // Left stick X axis -> left and right movement
         // Right stick X axis -> rotation
+
         drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain,
                 () -> -modifyAxis(driverController.getLeftY()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor,
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor,
                 () -> -modifyAxis(driverController.getRightX()) * MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
                         * maxSpeedFactor));
-
         // Configure the button bindings
         configureButtonBindings();
         configureAutos();
