@@ -255,6 +255,12 @@ public class Drivetrain extends SubsystemBase {
         // Update the odometry
         updateOdometry();
 
+        //Update PID vals
+        frontLeftModule.updatePidValues();
+        frontRightModule.updatePidValues();
+        backLeftModule.updatePidValues();
+        backRightModule.updatePidValues();
+
         // Diagnostics
         SmartDashboard.putNumber("Front Left Absolute", frontLeftModule.getAbsolutePosition());
         SmartDashboard.putNumber("Front Right Absolute", frontRightModule.getAbsolutePosition());

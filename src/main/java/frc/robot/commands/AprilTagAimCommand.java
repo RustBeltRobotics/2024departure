@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.GenericEntry;
@@ -32,14 +31,14 @@ public class AprilTagAimCommand extends Command {
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
     private ShuffleboardTab tab = Shuffleboard.getTab("SmartDashboard");
-    private GenericEntry kS =
-      tab.add("kS", 0.1)
+    private GenericEntry kP =
+      tab.add("kP", 0.1)
          .getEntry();
-    private GenericEntry kV =
-      tab.add("kV", 1.0)
+    private GenericEntry kI =
+      tab.add("kI", 1.0)
          .getEntry();
-    private GenericEntry kA =
-      tab.add("kA", 0.0)
+    private GenericEntry kD =
+      tab.add("kD", 0.0)
          .getEntry();
 
 
@@ -58,35 +57,35 @@ public class AprilTagAimCommand extends Command {
     @Override
     public void execute() {
         System.out.println("execute start");
-        final SimpleMotorFeedforward steerFeedforward = new SimpleMotorFeedforward(kS.getDouble(0.0), kV.getDouble(0.0), kA.getDouble(0.0));
+        //final SimpleMotorFeedforward steerFeedforward = new SimpleMotorFeedforward(kS.getDouble(0.0), kV.getDouble(0.0), kA.getDouble(0.0));
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 switch (target) {
                 case "speaker":
-                    targetTID = 3;
-                    targetTID2 = 4;
+                    targetTID = 3.0;
+                    targetTID2 = 4.0;
                     break;
                 case "amp":
-                    targetTID = 5;
+                    targetTID = 5.0;
                     break;
                 case "source":
-                    targetTID = 9;
-                    targetTID2 = 10;                    
+                    targetTID = 9.0;
+                    targetTID2 = 10.0;                    
                     break;
                 }
             }
         } else {//its blue
                 switch (target) {
                 case "speaker":
-                    targetTID = 7;
-                    targetTID2 = 8;
+                    targetTID = 7.0;
+                    targetTID2 = 8.0;
                     break;
                 case "amp":
-                    targetTID = 6;
+                    targetTID = 6.0;
                     break;
                 case "source":
-                    targetTID = 1;
-                    targetTID2 = 2;
+                    targetTID = 1.0;
+                    targetTID2 = 2.0;
                     break;
                 }
         }
@@ -106,7 +105,7 @@ public class AprilTagAimCommand extends Command {
             SmartDashboard.putNumber("steringadjust",steeringAdjust);
             SmartDashboard.putNumber("tx",tx);
         } else { // just normal drive with no rotation
-            SmartDashboard.putString("steeringadjust", "no valid TID");
+            SmartDashboard.putString("steeringadjust", "no valid TID " + sightedTID + ", " + targetTID);
             drivetrain.drive(ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble(),
                 stickY.getAsDouble(),
