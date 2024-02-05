@@ -3,6 +3,7 @@ package frc.robot.commands;
 import static frc.robot.Constants.limelightName;
 import static frc.robot.Constants.speedLimit;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
@@ -13,7 +14,6 @@ import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LimelightHelpers;
@@ -28,21 +28,15 @@ public class AprilTagAimCommand extends Command {
     private double steeringAdjust; 
     private DoubleSupplier stickX;
     private DoubleSupplier stickY;
+    ;
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
-    private ShuffleboardTab tab = Shuffleboard.getTab("SmartDashboard");
-    private GenericEntry kP =
-      tab.add("kP", 0.1)
-         .getEntry();
-    private GenericEntry kI =
-      tab.add("kI", 1.0)
-         .getEntry();
-    private GenericEntry kD =
-      tab.add("kD", 0.0)
-         .getEntry();
-
-
-
+    GenericEntry aimCommand = Shuffleboard.getTab("Competition")
+   .add("shot threashold", false)
+   .withWidget("Boolean Box")
+   .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "maroon"))
+   .getEntry();
+    
     private final Drivetrain drivetrain;
     public AprilTagAimCommand(Drivetrain drivetrain, String target, DoubleSupplier stickX, DoubleSupplier stickY) {
         this.drivetrain = drivetrain;
@@ -51,13 +45,11 @@ public class AprilTagAimCommand extends Command {
         this.stickY = stickY;
         addRequirements(drivetrain);
     }
-    private final PIDController steerPID = new PIDController(.13, .13, .01);
-    
-    
+    private final PIDController steerPID = new PIDController(0.13, 0.13, 0.01);
+
     @Override
     public void execute() {
         System.out.println("execute start");
-        //final SimpleMotorFeedforward steerFeedforward = new SimpleMotorFeedforward(kS.getDouble(0.0), kV.getDouble(0.0), kA.getDouble(0.0));
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 switch (target) {
@@ -112,6 +104,7 @@ public class AprilTagAimCommand extends Command {
                 0,
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())), 0.020));
         }
+        if (tx < 3.0){ aimCommand.setBoolean(true); }
     }
     @Override
     public void end(boolean interrupted) {
