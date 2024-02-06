@@ -49,7 +49,7 @@ public class AprilTagAimCommand extends Command {
 
     @Override
     public void execute() {
-        System.out.println("execute start");
+        System.out.println("execute start, alliance="+alliance.get());
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 switch (target) {
@@ -96,6 +96,7 @@ public class AprilTagAimCommand extends Command {
             drivetrain.drive(ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.020));
             SmartDashboard.putNumber("steringadjust",steeringAdjust);
             SmartDashboard.putNumber("tx",tx);
+            if (tx < 3.0){ aimCommand.setBoolean(true); } else { aimCommand.setBoolean(false); }
         } else { // just normal drive with no rotation
             SmartDashboard.putString("steeringadjust", "no valid TID " + sightedTID + ", " + targetTID);
             drivetrain.drive(ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -103,8 +104,8 @@ public class AprilTagAimCommand extends Command {
                 stickY.getAsDouble(),
                 0,
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())), 0.020));
+                aimCommand.setBoolean(false);
         }
-        if (tx < 3.0){ aimCommand.setBoolean(true); }
     }
     @Override
     public void end(boolean interrupted) {
