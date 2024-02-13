@@ -13,7 +13,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LimelightHelpers;
@@ -28,13 +30,26 @@ public class AprilTagAimCommand extends Command {
     private double steeringAdjust; 
     private DoubleSupplier stickX;
     private DoubleSupplier stickY;
-    ;
+
     private Optional<Alliance> alliance = DriverStation.getAlliance();
+
+    private ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
+             .getLayout("LL Aim", BuiltInLayouts.kList)
+             .withSize(2, 2);
+    private GenericEntry kP =
+      pidvals.add("kP", 0.13)
+         .getEntry();
+    private GenericEntry kI =
+      pidvals.add("kI", 0.13)
+         .getEntry();
+    private GenericEntry kD =
+      pidvals.add("kD", 0.13)
+         .getEntry();
 
     GenericEntry aimCommand = Shuffleboard.getTab("Competition")
    .add("shot threashold", false)
    .withWidget("Boolean Box")
-   .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "maroon"))
+   .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
    .getEntry();
     
     private final Drivetrain drivetrain;
@@ -45,11 +60,10 @@ public class AprilTagAimCommand extends Command {
         this.stickY = stickY;
         addRequirements(drivetrain);
     }
-    private final PIDController steerPID = new PIDController(0.13, 0.13, 0.01);
-
     @Override
     public void execute() {
-        System.out.println("execute start, alliance="+alliance.get());
+        System.out.println("execute start, " + alliance);
+        final PIDController steerPID = new PIDController(kP.getDouble(0.13), kI.getDouble(0.13), kD.getDouble(0.01));
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
                 switch (target) {

@@ -2,8 +2,12 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drivetrain;
+
+import java.util.Map;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -17,6 +21,12 @@ public class FieldOrientedDriveCommand extends Command {
     private final DoubleSupplier translationXSupplier;
     private final DoubleSupplier translationYSupplier;
     private final DoubleSupplier rotationSupplier;
+
+    GenericEntry feildOrientEntry = Shuffleboard.getTab("Competition")
+            .add("Field Oriented", false)
+            .withWidget("Boolean Box")
+            .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
+            .getEntry();
 
     public FieldOrientedDriveCommand(Drivetrain drivetrain,
             DoubleSupplier translationXSupplier,
@@ -39,6 +49,7 @@ public class FieldOrientedDriveCommand extends Command {
      */
     @Override
     public void execute() {
+            feildOrientEntry.setBoolean(true); 
             drivetrain.drive(ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
                     translationXSupplier.getAsDouble(),
                     translationYSupplier.getAsDouble(),
@@ -50,5 +61,6 @@ public class FieldOrientedDriveCommand extends Command {
     @Override
     public void end(boolean interrupted) {
         drivetrain.drive(new ChassisSpeeds(0, 0, 0));
+        feildOrientEntry.setBoolean(false);
     }
 }

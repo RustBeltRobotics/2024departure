@@ -10,7 +10,10 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 
 import static frc.robot.Constants.*;
 
@@ -20,12 +23,39 @@ public class SwerveModule {
 
     private SparkPIDController drivePidController;
     private SparkPIDController steerPidController;
-    public double kP, kI, kD, kIz, drive_kFF, kMaxOutput, kMinOutput, steer_kFF;
-
     private final RelativeEncoder driveEncoder;
     private final RelativeEncoder steerEncoder;
 
     private final CANcoder absoluteSteerEncoder;
+
+    //Shuffling
+        private static ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
+             .getLayout("Swerve PID", BuiltInLayouts.kList)
+             .withSize(2, 2);
+        private static GenericEntry kP =
+        pidvals.add("skP", 7e-5)
+            .getEntry();
+        private static GenericEntry kI =
+        pidvals.add("skI", 0.0)
+            .getEntry();
+        private static GenericEntry kD =
+            pidvals.add("skD", 0.0)
+            .getEntry();
+        private static GenericEntry kIz =
+            pidvals.add("skIz", 0.0)
+            .getEntry();
+        private static GenericEntry drive_kFF =
+            pidvals.add("sdrive_kFF", 0.000015)
+            .getEntry();
+        private static GenericEntry kMaxOutput =
+            pidvals.add("skMaxOutput", 1)
+            .getEntry();
+        private static GenericEntry kMinOutput =
+            pidvals.add("skMinOutput", -1)
+            .getEntry();
+        private static GenericEntry steer_kFF =
+            pidvals.add("ssteer_kFF", 0.0)
+            .getEntry();
 
     public SwerveModule(int driveID, int steerID, int encoderID, double offset) {
         // Setup drive motor SparkMax
@@ -66,37 +96,8 @@ public class SwerveModule {
         // Zero encoders to ensure steer relative matches absolute
         resetEncoders();
 
-        // PID coefficients
-        kP = 7e-5; 
-        kI = 0;
-        kD = 0; 
-        kIz = 0; 
-        kMaxOutput = 1; 
-        kMinOutput = -1;
-        
-        // PID coefficients (drive)
-        drive_kFF = 0.000015; 
-
-        // PID coefficients (steer)
-        steer_kFF = 0.0;
-
-        // set PID coefficients (drive)
-        drivePidController.setP(kP);
-        drivePidController.setI(kI);
-        drivePidController.setD(kD);
-        drivePidController.setIZone(kIz);
-        drivePidController.setFF(drive_kFF);
-        drivePidController.setOutputRange(kMinOutput, kMaxOutput);
-        drivePidController.setPositionPIDWrappingEnabled(true);
-
-        // set PID coefficients (steer)
-        steerPidController.setP(STEER_P);
-        steerPidController.setI(STEER_I);
-        steerPidController.setD(STEER_D);
-        steerPidController.setIZone(kIz);
-        steerPidController.setFF(steer_kFF);
-        steerPidController.setOutputRange(kMinOutput, kMaxOutput);
-        steerPidController.setPositionPIDWrappingEnabled(true);
+        //set the things
+        updateSwervePid();
     }
 
     /** @return Drive position, meters, -inf to +inf */
@@ -159,7 +160,6 @@ public class SwerveModule {
         state = SwerveModuleState.optimize(state, getState().angle);
         drivePidController.setReference(state.speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND, CANSparkMax.ControlType.kDutyCycle);
         setSparkAngle(state.angle.getDegrees());
-        SmartDashboard.putNumber("sate angle", state.angle.getDegrees());
     }
 
     /**
@@ -181,7 +181,6 @@ public class SwerveModule {
         double sparkRelativeTargetAngle = reboundValue(targetAngleInDegrees, currentSparkAngle);
         steerPidController.setReference(sparkRelativeTargetAngle, ControlType.kPosition);
         System.out.println(sparkRelativeTargetAngle);
-        SmartDashboard.putNumber("commanded angle",targetAngleInDegrees);
     }
     public double reboundValue(double value, double anchor){
         double lowerBound = anchor - 180;
@@ -194,33 +193,23 @@ public class SwerveModule {
         }
         return value;
     }
+    public void updateSwervePid(){
+        // set PID coefficients (drive)
+        drivePidController.setP(kP.getDouble(0));
+        drivePidController.setI(kI.getDouble(0));
+        drivePidController.setD(kD.getDouble(0));
+        drivePidController.setIZone(kIz.getDouble(0));
+        drivePidController.setFF(drive_kFF.getDouble(0));
+        drivePidController.setOutputRange(kMinOutput.getDouble(0), kMaxOutput.getDouble(0));
+        drivePidController.setPositionPIDWrappingEnabled(true);
 
-    public void updatePidValues() {
-        // read PID coefficients from SmartDashboard
-        double p = SmartDashboard.getNumber("Drive P Gain", 0);
-        double i = SmartDashboard.getNumber("Drive I Gain", 0);
-        double d = SmartDashboard.getNumber("Drive D Gain", 0);
-        double iz = SmartDashboard.getNumber("I Zone", 0);
-        double dff = SmartDashboard.getNumber("Drive Feed Forward", 0);
-        double sff = SmartDashboard.getNumber("Steer Feed Forward", 0);
-        double max = SmartDashboard.getNumber("Max Output", 0);
-        double min = SmartDashboard.getNumber("Min Output", 0);
-
-        // if PID coefficients on SmartDashboard have changed, write new values to controller
-        if((p != kP)) { drivePidController.setP(p); kP = p; }
-        if((i != kI)) { drivePidController.setI(i); kI = i; }
-        if((d != kD)) { drivePidController.setD(d); kD = d; }
-        if((iz != kIz)) { drivePidController.setIZone(iz); kIz = iz; }
-        if((dff != drive_kFF)) { drivePidController.setFF(dff); drive_kFF = dff; }
-        if((max != kMaxOutput) || (min != kMinOutput)) { 
-            drivePidController.setOutputRange(min, max); 
-            kMinOutput = min; kMaxOutput = max;
-        }
-        if((iz != kIz)) { steerPidController.setIZone(iz); kIz = iz; }
-        if((sff != steer_kFF)) { steerPidController.setFF(sff); steer_kFF = sff; }
-        if((max != kMaxOutput) || (min != kMinOutput)) { 
-            steerPidController.setOutputRange(min, max); 
-            kMinOutput = min; kMaxOutput = max;
-        }
+        // set PID coefficients (steer)
+        steerPidController.setP(STEER_P);
+        steerPidController.setI(STEER_I);
+        steerPidController.setD(STEER_D);
+        steerPidController.setIZone(kIz.getDouble(0));
+        steerPidController.setFF(steer_kFF.getDouble(0));
+        steerPidController.setOutputRange(kMinOutput.getDouble(0), kMaxOutput.getDouble(0));
+        steerPidController.setPositionPIDWrappingEnabled(true);
     }
 }

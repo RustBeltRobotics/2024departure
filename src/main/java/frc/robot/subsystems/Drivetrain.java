@@ -1,5 +1,31 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.BACK_LEFT_MODULE_DRIVE_MOTOR;
+import static frc.robot.Constants.BACK_LEFT_MODULE_STEER_ENCODER;
+import static frc.robot.Constants.BACK_LEFT_MODULE_STEER_MOTOR;
+import static frc.robot.Constants.BACK_LEFT_MODULE_STEER_OFFSET;
+import static frc.robot.Constants.BACK_RIGHT_MODULE_DRIVE_MOTOR;
+import static frc.robot.Constants.BACK_RIGHT_MODULE_STEER_ENCODER;
+import static frc.robot.Constants.BACK_RIGHT_MODULE_STEER_MOTOR;
+import static frc.robot.Constants.BACK_RIGHT_MODULE_STEER_OFFSET;
+import static frc.robot.Constants.FRONT_LEFT_MODULE_DRIVE_MOTOR;
+import static frc.robot.Constants.FRONT_LEFT_MODULE_STEER_ENCODER;
+import static frc.robot.Constants.FRONT_LEFT_MODULE_STEER_MOTOR;
+import static frc.robot.Constants.FRONT_LEFT_MODULE_STEER_OFFSET;
+import static frc.robot.Constants.FRONT_RIGHT_MODULE_DRIVE_MOTOR;
+import static frc.robot.Constants.FRONT_RIGHT_MODULE_STEER_ENCODER;
+import static frc.robot.Constants.FRONT_RIGHT_MODULE_STEER_MOTOR;
+import static frc.robot.Constants.FRONT_RIGHT_MODULE_STEER_OFFSET;
+import static frc.robot.Constants.KINEMATICS;
+import static frc.robot.Constants.MAX_VELOCITY_METERS_PER_SECOND;
+import static frc.robot.Constants.limelightName;
+import static frc.robot.Constants.rotation_D;
+import static frc.robot.Constants.rotation_I;
+import static frc.robot.Constants.rotation_P;
+import static frc.robot.Constants.translation_D;
+import static frc.robot.Constants.translation_I;
+import static frc.robot.Constants.translation_P;
+
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -13,15 +39,16 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
-
-import static frc.robot.Constants.*;
 
 public class Drivetrain extends SubsystemBase {
 
@@ -48,6 +75,24 @@ public class Drivetrain extends SubsystemBase {
 
     private final SwerveDrivePoseEstimator poseEstimator;
 
+    //The Shuffle
+    ShuffleboardLayout drivetrainLayout = Shuffleboard.getTab("Competition")
+    .getLayout("Drivetrain", BuiltInLayouts.kList);
+        private final GenericEntry FRA =
+        drivetrainLayout.add("Front Left Absolute", 0)
+         .getEntry();
+        private final GenericEntry FLA =
+        drivetrainLayout.add("Front Right Absolute", 0)
+         .getEntry();
+        private final GenericEntry BRA =
+        drivetrainLayout.add("Back Left Absolute", 0)
+         .getEntry();
+        private final GenericEntry BLA =
+        drivetrainLayout.add("Back Right Absolute", 0)
+         .getEntry();
+        private final GenericEntry Gyro =
+        drivetrainLayout.add("Gryoscope Angle", 0)
+         .getEntry();
     public Drivetrain() {
 
          // Configure AutoBuilder last
@@ -254,18 +299,11 @@ public class Drivetrain extends SubsystemBase {
 
         // Update the odometry
         updateOdometry();
-
-        //Update PID vals
-        frontLeftModule.updatePidValues();
-        frontRightModule.updatePidValues();
-        backLeftModule.updatePidValues();
-        backRightModule.updatePidValues();
-
         // Diagnostics
-        SmartDashboard.putNumber("Front Left Absolute", frontLeftModule.getAbsolutePosition());
-        SmartDashboard.putNumber("Front Right Absolute", frontRightModule.getAbsolutePosition());
-        SmartDashboard.putNumber("Back Left Absolute", backLeftModule.getAbsolutePosition());
-        SmartDashboard.putNumber("Back Right Absolute", backRightModule.getAbsolutePosition());
-        SmartDashboard.putNumber("Gyro", getGyroscopeAngle());
+        FRA.setDouble(frontLeftModule.getAbsolutePosition());
+        FLA.setDouble(frontRightModule.getAbsolutePosition());
+        BRA.setDouble(backLeftModule.getAbsolutePosition());
+        BLA.setDouble(backRightModule.getAbsolutePosition());
+        Gyro.setDouble(getGyroscopeAngle());
     }
 }
