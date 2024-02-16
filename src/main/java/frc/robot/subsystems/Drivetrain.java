@@ -26,6 +26,8 @@ import static frc.robot.Constants.translation_D;
 import static frc.robot.Constants.translation_I;
 import static frc.robot.Constants.translation_P;
 
+import java.util.Map;
+
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -87,22 +89,40 @@ public class Drivetrain extends SubsystemBase {
     ShuffleboardLayout drivetrainLayout = Shuffleboard.getTab("Competition")
     .getLayout("Drivetrain", BuiltInLayouts.kList)
     .withSize(2,3)
-    .withPosition(1,0);
-        private final GenericEntry FRA =
+    .withPosition(1,1);
+    private final GenericEntry FRA =
         drivetrainLayout.add("Front Left Absolute", 0)
-         .getEntry();
-        private final GenericEntry FLA =
+        .getEntry();
+    private final GenericEntry FLA =
         drivetrainLayout.add("Front Right Absolute", 0)
-         .getEntry();
-        private final GenericEntry BRA =
+        .getEntry();
+    private final GenericEntry BRA =
         drivetrainLayout.add("Back Left Absolute", 0)
-         .getEntry();
-        private final GenericEntry BLA =
+        .getEntry();
+    private final GenericEntry BLA =
         drivetrainLayout.add("Back Right Absolute", 0)
-         .getEntry();
-        private final GenericEntry Gyro =
+        .getEntry();
+    private final GenericEntry Gyro =
         drivetrainLayout.add("Gryoscope Angle", 0)
-         .getEntry();
+        .getEntry();
+    private final GenericEntry defaultEntry = Shuffleboard.getTab("Competition")
+        .add("default", false)
+        .withWidget("Boolean Box")
+        .withPosition(2, 0)
+        .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
+        .getEntry();
+    private final GenericEntry FLEntry = Shuffleboard.getTab("Competition")
+        .add("default", false)
+        .withWidget("Boolean Box")
+        .withPosition(1, 0)
+        .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
+        .getEntry();
+    private final GenericEntry FREntry = Shuffleboard.getTab("Competition")
+        .add("default", false)
+        .withWidget("Boolean Box")
+        .withPosition(3, 0)
+        .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
+        .getEntry();
 
     //networktables publisher for advantagescope swerve visualization
     private final StructArrayPublisher<SwerveModuleState> statePublisher;
@@ -181,7 +201,7 @@ public class Drivetrain extends SubsystemBase {
         poseEstimator = new SwerveDrivePoseEstimator(KINEMATICS, getGyroscopeRotation(), getSwerveModulePositions(),
                 new Pose2d());
 
-        theMoves("default");
+        theMove = "default";
     }
 
     /**
@@ -257,9 +277,10 @@ public class Drivetrain extends SubsystemBase {
     /**
      * Decide where the center of rotation is going to be based on function call (we got the moves)
      **/
-    public void theMoves(String theMove){
+    public void setMoves(String theMove){
         this.theMove = theMove;
     }
+
     /**
      * Used to drive the robot with the provided ChassisSpeed object. However, if
      * the robot is in autobalance mode, the ChassisSpeed object is ignored, and a
@@ -307,13 +328,24 @@ public class Drivetrain extends SubsystemBase {
         switch (theMove){
             case "FL":
                 states = KINEMATICS.toSwerveModuleStates(chassisSpeeds, new Translation2d(Constants.DRIVETRAIN_TRACKWIDTH_METERS / 2., Constants.DRIVETRAIN_WHEELBASE_METERS / 2.));
-                System.out.println("FL");
+                defaultEntry.setBoolean(false);
+                FLEntry.setBoolean(true);
+                FREntry.setBoolean(false); 
+                break;
             case "FR":
                 states = KINEMATICS.toSwerveModuleStates(chassisSpeeds, new Translation2d(Constants.DRIVETRAIN_TRACKWIDTH_METERS / 2., Constants.DRIVETRAIN_WHEELBASE_METERS / 2.));
+                defaultEntry.setBoolean(false);
+                FLEntry.setBoolean(false);
+                FREntry.setBoolean(true); 
+                break;
             case "default":
                 states = KINEMATICS.toSwerveModuleStates(chassisSpeeds);
+                defaultEntry.setBoolean(true);
+                FLEntry.setBoolean(false);
+                FREntry.setBoolean(false); 
+                break;
         }
-
+        System.out.println(theMove);
 
         SwerveDriveKinematics.desaturateWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
         if (!wheelsLocked) {

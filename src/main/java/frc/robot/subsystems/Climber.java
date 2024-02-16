@@ -10,6 +10,10 @@ import static frc.robot.Constants.NEO_SMART_CURRENT_LIMIT;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkPIDController;
 
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Climber extends SubsystemBase {
@@ -17,7 +21,31 @@ public class Climber extends SubsystemBase {
     private final CANSparkMax climberMotor2;
     private final SparkPIDController climber1PidController;
     // private final SparkPIDController shooter2PidController;
-    public double kP, kI, kD, kIz, kMaxOutput, kMinOutput, kFF;
+
+    private static ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
+        .getLayout("Climber PID", BuiltInLayouts.kList)
+        .withSize(2, 2);
+    private static GenericEntry kP =
+        pidvals.add("skP", 7e-5)
+        .getEntry();
+    private static GenericEntry kI =
+        pidvals.add("skI", 0.0)
+        .getEntry();
+    private static GenericEntry kD =
+        pidvals.add("skD", 0.0)
+        .getEntry();
+    private static GenericEntry kIz =
+        pidvals.add("skIz", 0.0)
+        .getEntry();
+    private static GenericEntry kFF =
+        pidvals.add("sdrive_kFF", 0.0)
+        .getEntry();
+    private static GenericEntry kMaxOutput =
+        pidvals.add("skMaxOutput", 1)
+        .getEntry();
+    private static GenericEntry kMinOutput =
+        pidvals.add("skMinOutput", -1)
+        .getEntry();
 
     public Climber(){
         //set motor things
@@ -36,23 +64,14 @@ public class Climber extends SubsystemBase {
         climberMotor2.setSecondaryCurrentLimit(NEO_SECONDARY_CURRENT_LIMIT);
         climberMotor2.follow(climberMotor1, true); //TODO: check
 
-        // PID coefficients
-        kP = 7e-5; 
-        kI = 0;
-        kD = 0; 
-        kIz = 0;
-        kFF = 0;
-        kMaxOutput = 1; 
-        kMinOutput = -1;
-
         //set pid things
         climber1PidController = climberMotor1.getPIDController();
-        climber1PidController.setP(kP);
-        climber1PidController.setI(kI);
-        climber1PidController.setD(kD);
-        climber1PidController.setIZone(kIz);
-        climber1PidController.setFF(kFF);
-        climber1PidController.setOutputRange(kMinOutput, kMaxOutput);
+        climber1PidController.setP(kP.getDouble(7e-5));
+        climber1PidController.setI(kI.getDouble(0));
+        climber1PidController.setD(kD.getDouble(0));
+        climber1PidController.setIZone(kIz.getDouble(0));
+        climber1PidController.setFF(kFF.getDouble(0));
+        climber1PidController.setOutputRange(kMinOutput.getDouble(-1), kMaxOutput.getDouble(1));
         climber1PidController.setPositionPIDWrappingEnabled(true);
 
         // shooter2PidController = climberMotor2.getPIDController();

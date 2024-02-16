@@ -10,14 +10,41 @@ import static frc.robot.Constants.NEO_SMART_CURRENT_LIMIT;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkPIDController;
 
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
     private final CANSparkMax shooterMotor1;
     private final CANSparkMax shooterMotor2;
     private final SparkPIDController shooter1PidController;
-    // private final SparkPIDController shooter2PidController;
-    public double kP, kI, kD, kIz, kMaxOutput, kMinOutput, kFF;
+    // private final SparkPIDController shooter2PidController;    
+    private static ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
+        .getLayout("Shooter PID", BuiltInLayouts.kList)
+        .withSize(2, 2);
+    private static GenericEntry kP =
+        pidvals.add("skP", 7e-5)
+        .getEntry();
+    private static GenericEntry kI =
+        pidvals.add("skI", 0.0)
+        .getEntry();
+    private static GenericEntry kD =
+        pidvals.add("skD", 0.0)
+        .getEntry();
+    private static GenericEntry kIz =
+        pidvals.add("skIz", 0.0)
+        .getEntry();
+    private static GenericEntry kFF =
+        pidvals.add("sdrive_kFF", 0.0)
+        .getEntry();
+    private static GenericEntry kMaxOutput =
+        pidvals.add("skMaxOutput", 1)
+        .getEntry();
+    private static GenericEntry kMinOutput =
+        pidvals.add("skMinOutput", -1)
+        .getEntry();
 
     public Shooter(){
         //set motor things
@@ -36,23 +63,14 @@ public class Shooter extends SubsystemBase {
         shooterMotor2.setSecondaryCurrentLimit(NEO_SECONDARY_CURRENT_LIMIT);
         shooterMotor2.follow(shooterMotor1, true); //TODO: check
 
-        // PID coefficients
-        kP = 7e-5; 
-        kI = 0;
-        kD = 0; 
-        kIz = 0;
-        kFF = 0;
-        kMaxOutput = 1; 
-        kMinOutput = -1;
-
         //set pid things
         shooter1PidController = shooterMotor1.getPIDController();
-        shooter1PidController.setP(kP);
-        shooter1PidController.setI(kI);
-        shooter1PidController.setD(kD);
-        shooter1PidController.setIZone(kIz);
-        shooter1PidController.setFF(kFF);
-        shooter1PidController.setOutputRange(kMinOutput, kMaxOutput);
+        shooter1PidController.setP(kP.getDouble(7e-5));
+        shooter1PidController.setI(kI.getDouble(0));
+        shooter1PidController.setD(kD.getDouble(0));
+        shooter1PidController.setIZone(kIz.getDouble(0));
+        shooter1PidController.setFF(kFF.getDouble(0));
+        shooter1PidController.setOutputRange(kMinOutput.getDouble(-1), kMaxOutput.getDouble(1));
         shooter1PidController.setPositionPIDWrappingEnabled(true);
 
         // shooter2PidController = shooterMotor2.getPIDController();

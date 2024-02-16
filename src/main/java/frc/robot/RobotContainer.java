@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.commands.AprilTagAimCommand;
@@ -25,6 +26,11 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
  * commands, and button mappings) should be declared here.
  */
 public class RobotContainer {    
+    POVButton dpadUpButton = new POVButton(driverController, 0);
+    POVButton dpadLeftButton = new POVButton(driverController, 270);
+    POVButton dpadRightButton = new POVButton(driverController, 90);
+
+
     // The robot's subsystems are defined here
     public static final Drivetrain drivetrain = new Drivetrain();
 
@@ -79,12 +85,10 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor,
                 () -> -modifyAxis(driverController.getRightX()) * MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
                         * maxSpeedFactor, () -> -1));
-        new Trigger(operatorController::getAButton).toggleOnTrue(new InstantCommand(() -> drivetrain.theMoves("default")));
-        new Trigger(operatorController::getXButton).toggleOnTrue(new InstantCommand(() -> drivetrain.theMoves("FL")));
-        new Trigger(operatorController::getBButton).toggleOnTrue(new InstantCommand(() -> drivetrain.theMoves("FR")));
-
+        new Trigger(dpadUpButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("default")));
+        new Trigger(dpadLeftButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("FL")));
+        new Trigger(dpadRightButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("FR")));
     }
-
     public void configureAutos() {
         //autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
