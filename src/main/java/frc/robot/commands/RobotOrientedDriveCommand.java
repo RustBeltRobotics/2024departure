@@ -26,6 +26,7 @@ public class RobotOrientedDriveCommand extends Command {
     GenericEntry robotOrientEntry = Shuffleboard.getTab("Competition")
             .add("Robot Oriented", false)
             .withWidget("Boolean Box")
+            .withPosition(0, 1)
             .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
             .getEntry();
 

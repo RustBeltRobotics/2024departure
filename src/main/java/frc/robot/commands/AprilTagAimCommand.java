@@ -49,6 +49,7 @@ public class AprilTagAimCommand extends Command {
     GenericEntry aimCommand = Shuffleboard.getTab("Competition")
    .add("shot threashold", false)
    .withWidget("Boolean Box")
+   .withPosition(10, 0)
    .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
    .getEntry();
     
@@ -58,7 +59,7 @@ public class AprilTagAimCommand extends Command {
         this.target = target;
         this.stickX = stickX;
         this.stickY = stickY;
-        addRequirements(drivetrain);
+    addRequirements(drivetrain); 
     }
     @Override
     public void execute() {

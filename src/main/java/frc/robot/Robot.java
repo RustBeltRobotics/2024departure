@@ -26,7 +26,6 @@ public class Robot extends TimedRobot {
     private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
 
     private GenericEntry timeEntry = matchTab.add("Time Left", 0.).withPosition(3, 3).withWidget(BuiltInWidgets.kTextView).getEntry();
-
     /**
      * This function is run once when the robot is first started up and should be
      * used for any initialization code.
@@ -39,6 +38,7 @@ public class Robot extends TimedRobot {
             PortForwarder.add(port, "limelight.local", port);
         }
         CameraServer.startAutomaticCapture();
+
         //prints literally everything to the ds :)
         SmartDashboard.putData(CommandScheduler.getInstance());
     }

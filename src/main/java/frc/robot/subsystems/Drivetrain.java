@@ -35,11 +35,15 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
@@ -51,6 +55,7 @@ import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 
 public class Drivetrain extends SubsystemBase {
+    private String theMove;
 
     // NavX connected over MXP
     public final AHRS navx;
@@ -75,9 +80,14 @@ public class Drivetrain extends SubsystemBase {
 
     private final SwerveDrivePoseEstimator poseEstimator;
 
+    private SwerveModuleState[] states;
+
+
     //The Shuffle
     ShuffleboardLayout drivetrainLayout = Shuffleboard.getTab("Competition")
-    .getLayout("Drivetrain", BuiltInLayouts.kList);
+    .getLayout("Drivetrain", BuiltInLayouts.kList)
+    .withSize(2,3)
+    .withPosition(1,0);
         private final GenericEntry FRA =
         drivetrainLayout.add("Front Left Absolute", 0)
          .getEntry();
@@ -93,7 +103,18 @@ public class Drivetrain extends SubsystemBase {
         private final GenericEntry Gyro =
         drivetrainLayout.add("Gryoscope Angle", 0)
          .getEntry();
+
+    //networktables publisher for advantagescope swerve visualization
+    private final StructArrayPublisher<SwerveModuleState> statePublisher;
+    ////networktables publisher for advantagescope 2d pose visualization
+    StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault()
+            .getStructTopic("MyPose", Pose2d.struct).publish();
+
     public Drivetrain() {
+
+        // Start publishing an array of module states with the "/SwerveStates" key
+        statePublisher = NetworkTableInstance.getDefault()
+            .getStructArrayTopic("/SwerveStates", SwerveModuleState.struct).publish();
 
          // Configure AutoBuilder last
         AutoBuilder.configureHolonomic(
@@ -159,6 +180,8 @@ public class Drivetrain extends SubsystemBase {
 
         poseEstimator = new SwerveDrivePoseEstimator(KINEMATICS, getGyroscopeRotation(), getSwerveModulePositions(),
                 new Pose2d());
+
+        theMoves("default");
     }
 
     /**
@@ -232,6 +255,12 @@ public class Drivetrain extends SubsystemBase {
     }
 
     /**
+     * Decide where the center of rotation is going to be based on function call (we got the moves)
+     **/
+    public void theMoves(String theMove){
+        this.theMove = theMove;
+    }
+    /**
      * Used to drive the robot with the provided ChassisSpeed object. However, if
      * the robot is in autobalance mode, the ChassisSpeed object is ignored, and a
      * new one is calculated based off the pitch and roll of the robot.
@@ -274,12 +303,18 @@ public class Drivetrain extends SubsystemBase {
 
         if (visionPose2d.getX() != 0.0 && poseDifference < 0.5) {
             poseEstimator.addVisionMeasurement(visionPose2d, poseReadingTimestamp);
-        }      
+        }
+        switch (theMove){
+            case "FL":
+                states = KINEMATICS.toSwerveModuleStates(chassisSpeeds, new Translation2d(Constants.DRIVETRAIN_TRACKWIDTH_METERS / 2., Constants.DRIVETRAIN_WHEELBASE_METERS / 2.));
+                System.out.println("FL");
+            case "FR":
+                states = KINEMATICS.toSwerveModuleStates(chassisSpeeds, new Translation2d(Constants.DRIVETRAIN_TRACKWIDTH_METERS / 2., Constants.DRIVETRAIN_WHEELBASE_METERS / 2.));
+            case "default":
+                states = KINEMATICS.toSwerveModuleStates(chassisSpeeds);
+        }
 
-        // Convert from ChassisSpeeds to SwerveModuleStates
-        SwerveModuleState[] states = KINEMATICS.toSwerveModuleStates(chassisSpeeds);
-        // Make sure no modules are being commanded to velocites greater than the max
-        // possible velocity
+
         SwerveDriveKinematics.desaturateWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
         if (!wheelsLocked) {
             // If we are not in wheel's locked mode, set the states normally
@@ -299,11 +334,22 @@ public class Drivetrain extends SubsystemBase {
 
         // Update the odometry
         updateOdometry();
+
         // Diagnostics
         FRA.setDouble(frontLeftModule.getAbsolutePosition());
         FLA.setDouble(frontRightModule.getAbsolutePosition());
         BRA.setDouble(backLeftModule.getAbsolutePosition());
         BLA.setDouble(backRightModule.getAbsolutePosition());
         Gyro.setDouble(getGyroscopeAngle());
+
+        // Periodically send a set of module states (I hope)
+        statePublisher.set(new SwerveModuleState[] {
+            states[0],
+            states[1],
+            states[2],
+            states[3]
+        });
+
+        posePublisher.set(poseEstimator.getEstimatedPosition());
     }
 }

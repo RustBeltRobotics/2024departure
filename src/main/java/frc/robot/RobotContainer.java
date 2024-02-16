@@ -30,7 +30,7 @@ public class RobotContainer {
 
     // The drive team controllers are defined here
     public static final XboxController driverController = new XboxController(0);
-    // public static final XboxController operatorController = new XboxController(1);
+    public static final XboxController operatorController = new XboxController(1);
 
     // Limits maximum speed
     private double maxSpeedFactor = .2;
@@ -52,6 +52,7 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor,
                 () -> -modifyAxis(driverController.getRightX()) * MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
                         * maxSpeedFactor));
+
         // Configure the button bindings
         configureButtonBindings();
         configureAutos();
@@ -78,6 +79,10 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor,
                 () -> -modifyAxis(driverController.getRightX()) * MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
                         * maxSpeedFactor, () -> -1));
+        new Trigger(operatorController::getAButton).toggleOnTrue(new InstantCommand(() -> drivetrain.theMoves("default")));
+        new Trigger(operatorController::getXButton).toggleOnTrue(new InstantCommand(() -> drivetrain.theMoves("FL")));
+        new Trigger(operatorController::getBButton).toggleOnTrue(new InstantCommand(() -> drivetrain.theMoves("FR")));
+
     }
 
     public void configureAutos() {
