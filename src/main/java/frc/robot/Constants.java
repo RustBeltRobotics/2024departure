@@ -157,4 +157,6 @@ public final class Constants {
     public static final String limelightName = "limelight";
     public static final double speedLimit = 1.0;
 
+    //Shooter
+    public static final double SPOOL_VELOCITY = 4257; //75% of max velocity
 }

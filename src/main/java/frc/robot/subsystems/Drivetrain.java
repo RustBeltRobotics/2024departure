@@ -112,13 +112,13 @@ public class Drivetrain extends SubsystemBase {
         .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
         .getEntry();
     private final GenericEntry FLEntry = Shuffleboard.getTab("Competition")
-        .add("default", false)
+        .add("FL", false)
         .withWidget("Boolean Box")
         .withPosition(1, 0)
         .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
         .getEntry();
     private final GenericEntry FREntry = Shuffleboard.getTab("Competition")
-        .add("default", false)
+        .add("FR", false)
         .withWidget("Boolean Box")
         .withPosition(3, 0)
         .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
@@ -345,8 +345,6 @@ public class Drivetrain extends SubsystemBase {
                 FREntry.setBoolean(false); 
                 break;
         }
-        System.out.println(theMove);
-
         SwerveDriveKinematics.desaturateWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
         if (!wheelsLocked) {
             // If we are not in wheel's locked mode, set the states normally

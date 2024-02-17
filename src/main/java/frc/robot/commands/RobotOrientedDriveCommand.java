@@ -27,7 +27,7 @@ public class RobotOrientedDriveCommand extends Command {
             .add("Robot Oriented", false)
             .withWidget("Boolean Box")
             .withPosition(0, 1)
-            .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
+            .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
             .getEntry();
 
     public RobotOrientedDriveCommand(Drivetrain drivetrain,

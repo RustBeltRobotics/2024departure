@@ -26,7 +26,7 @@ public class FieldOrientedDriveCommand extends Command {
             .add("Field Oriented", false)
             .withWidget("Boolean Box")
             .withPosition(0, 0)
-            .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
+            .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
             .getEntry();
 
     public FieldOrientedDriveCommand(Drivetrain drivetrain,

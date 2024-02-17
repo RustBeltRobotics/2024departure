@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Shooter extends SubsystemBase {
     private final CANSparkMax shooterMotor1;
     private final CANSparkMax shooterMotor2;
-    private final SparkPIDController shooter1PidController;
+    private static SparkPIDController shooter1PidController;
     // private final SparkPIDController shooter2PidController;    
     private static ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
         .getLayout("Shooter PID", BuiltInLayouts.kList)
@@ -50,14 +50,14 @@ public class Shooter extends SubsystemBase {
         //set motor things
         shooterMotor1 = new CANSparkMax(97, MotorType.kBrushless);
         shooterMotor1.restoreFactoryDefaults();
-        shooterMotor1.setIdleMode(IdleMode.kBrake);
+        shooterMotor1.setIdleMode(IdleMode.kCoast);
         shooterMotor1.setInverted(false);
         shooterMotor1.setSmartCurrentLimit(NEO_SMART_CURRENT_LIMIT);
         shooterMotor1.setSecondaryCurrentLimit(NEO_SECONDARY_CURRENT_LIMIT);
 
         shooterMotor2 = new CANSparkMax(97, MotorType.kBrushless);
         shooterMotor2.restoreFactoryDefaults();
-        shooterMotor2.setIdleMode(IdleMode.kBrake);
+        shooterMotor2.setIdleMode(IdleMode.kCoast);
         shooterMotor2.setInverted(false);
         shooterMotor2.setSmartCurrentLimit(NEO_SMART_CURRENT_LIMIT);
         shooterMotor2.setSecondaryCurrentLimit(NEO_SECONDARY_CURRENT_LIMIT);
@@ -82,11 +82,12 @@ public class Shooter extends SubsystemBase {
         // shooter2PidController.setOutputRange(kMinOutput, kMaxOutput);
         // shooter2PidController.setPositionPIDWrappingEnabled(true);
     }
-    public void spinShooter(double velocity){
-        shooter1PidController.setReference(velocity, ControlType.kVelocity);
+    public static void spool(double velocity){
+        System.out.println("spooling imaginary shooter");
+        //shooter1PidController.setReference(velocity, ControlType.kVelocity);
         // shooter2PidController.setReference(velocity, ControlType.kVelocity);
     }
-    public void stopShooter(){
+    public void stop(){
         shooter1PidController.setReference(0, ControlType.kVelocity);
         // shooter2PidController.setReference(0, ControlType.kVelocity);
     }

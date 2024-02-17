@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase{
     private final CANSparkMax floorMotor;
-    private final CANSparkMax intakeMotor;
+    private static CANSparkMax intakeMotor;
 
     public Intake() {
         floorMotor = new CANSparkMax(99, MotorType.kBrushless);
@@ -36,10 +36,19 @@ public class Intake extends SubsystemBase{
         floorMotor.set(0);
         intakeMotor.set(0);
     }
-    public void runArmIntake(double speed){
+    public static void runArmIntake(double speed){
         intakeMotor.set(speed);
+    }
+    public static void stopArmIntake(){
+        intakeMotor.set(0);
     }
     public void runFloorIntakes(double speed){
         floorMotor.set(speed);
+    }
+    //runs the intake for 2 seconds in order to feed note into the shooter
+    public static void feedShooter(){
+        runArmIntake(1);
+        double startTime = System.currentTimeMillis();
+        if (System.currentTimeMillis() - startTime < 2.0) { stopArmIntake(); }
     }
 }

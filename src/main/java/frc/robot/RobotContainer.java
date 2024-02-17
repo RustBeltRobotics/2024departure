@@ -1,9 +1,12 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -12,11 +15,15 @@ import frc.robot.commands.AprilTagAimCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.commands.RobotOrientedDriveCommand;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Shooter;
 
 import static frc.robot.Constants.*;
 import static frc.robot.Utilities.*;
 
-import com.pathplanner.lib.commands.PathPlannerAuto;
+import java.util.Map;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -36,10 +43,13 @@ public class RobotContainer {
 
     // The drive team controllers are defined here
     public static final XboxController driverController = new XboxController(0);
-    public static final XboxController operatorController = new XboxController(1);
+    //public static final XboxController operatorController = new XboxController(1);
 
     // Limits maximum speed
     private double maxSpeedFactor = .2;
+
+    private ShuffleboardTab comp = Shuffleboard.getTab("Competition");
+    private GenericEntry speedometer = comp.add("Speed Limit", 0.0).withWidget(BuiltInWidgets.kNumberBar).withProperties(Map.of("min", 0, "max", 1)).withPosition(0, 5).getEntry();
 
     public static SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
@@ -59,6 +69,10 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getRightX()) * MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
                         * maxSpeedFactor));
 
+        //register april aim with pathplanner, passing 0,0 as stick suppliers and targeting speaker
+        NamedCommands.registerCommand("AprilTagAim", new AprilTagAimCommand(drivetrain, "speaker"));
+        NamedCommands.registerCommand("SpoolShooter", new InstantCommand(() -> Shooter.spool(Constants.SPOOL_VELOCITY)));
+
         // Configure the button bindings
         configureButtonBindings();
         configureAutos();
@@ -77,7 +91,8 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getLeftY()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor, 
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor));
         // Pressing the Right Bumper shifts to high speed
-        new Trigger(driverController::getRightBumper).onTrue(new InstantCommand(() -> speedUp()));
+        // new Trigger(driverController::getRightBumper).onTrue(new InstantCommand(() -> speedUp()));
+        new Trigger(driverController::getRightBumperPressed).whileTrue(new InstantCommand(() -> speedThrottle())); //new experimental throttle speed system, faster and smoother speed modulation
         // Pressing the Left Bumper shifts to low speed
         new Trigger(driverController::getLeftBumper).onTrue(new InstantCommand(() -> speedDown()));
         new Trigger(driverController::getXButton).toggleOnTrue(new RobotOrientedDriveCommand(drivetrain,
@@ -90,11 +105,9 @@ public class RobotContainer {
         new Trigger(dpadRightButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("FR")));
     }
     public void configureAutos() {
-        //autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        autoChooser = AutoBuilder.buildAutoChooser();
+        comp.add("Auto Chooser", autoChooser);
     }
-
-    
 
     /**
      * This method returns the autonomous routine that will be run at the start of
@@ -107,17 +120,26 @@ public class RobotContainer {
      * @return The autonomous routine that will be run
      */
     public Command getAutonomousCommand() {
-        //return autoChooser.getSelected();
-        return new PathPlannerAuto("New Auto");
+        return autoChooser.getSelected();
     }
-
+    public void speedThrottle() {
+        maxSpeedFactor = driverController.getLeftTriggerAxis();
+        maxSpeedFactor = MathUtil.clamp(maxSpeedFactor, 0.1, 1.0);
+        speedometer.setValue(maxSpeedFactor);
+    }
+    public void speedMax() {
+        maxSpeedFactor = 1;
+        speedometer.setValue(maxSpeedFactor);
+    }
     public void speedUp() {
         maxSpeedFactor += .1;
         maxSpeedFactor = MathUtil.clamp(maxSpeedFactor, .1, 1.);
+        speedometer.setValue(maxSpeedFactor);
     }
 
     public void speedDown() {
         maxSpeedFactor -= .1;
         maxSpeedFactor = MathUtil.clamp(maxSpeedFactor, .1, 1.);
+        speedometer.setValue(maxSpeedFactor);
     }
 }

@@ -16,10 +16,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LimelightHelpers;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Intake;
 
 public class AprilTagAimCommand extends Command {
     private double tx;
@@ -30,7 +30,8 @@ public class AprilTagAimCommand extends Command {
     private double steeringAdjust; 
     private DoubleSupplier stickX;
     private DoubleSupplier stickY;
-
+    private Boolean autonomous;
+    
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
     private ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
@@ -46,14 +47,15 @@ public class AprilTagAimCommand extends Command {
       pidvals.add("kD", 0.13)
          .getEntry();
 
-    GenericEntry aimCommand = Shuffleboard.getTab("Competition")
+    private GenericEntry aimCommand = Shuffleboard.getTab("Competition")
    .add("shot threashold", false)
    .withWidget("Boolean Box")
    .withPosition(10, 0)
-   .withProperties(Map.of("colorWhenTrue", "green", "colorWhenFalse", "red"))
+   .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
    .getEntry();
     
     private final Drivetrain drivetrain;
+    //constructor for teleop
     public AprilTagAimCommand(Drivetrain drivetrain, String target, DoubleSupplier stickX, DoubleSupplier stickY) {
         this.drivetrain = drivetrain;
         this.target = target;
@@ -61,9 +63,17 @@ public class AprilTagAimCommand extends Command {
         this.stickY = stickY;
     addRequirements(drivetrain); 
     }
+    //constructor for autonomous
+    public AprilTagAimCommand(Drivetrain drivetrain, String target) {
+        this.drivetrain = drivetrain;
+        this.target = target;
+        stickX = () -> 0;
+        stickY = () -> 0;
+        autonomous = true;
+        addRequirements(drivetrain); 
+    }
     @Override
     public void execute() {
-        System.out.println("execute start, " + alliance);
         final PIDController steerPID = new PIDController(kP.getDouble(0.13), kI.getDouble(0.13), kD.getDouble(0.01));
         if (alliance.isPresent()) {
             if (alliance.get() == DriverStation.Alliance.Red) {
@@ -109,11 +119,13 @@ public class AprilTagAimCommand extends Command {
                 Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset()));
             
             drivetrain.drive(ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.020));
-            SmartDashboard.putNumber("steringadjust",steeringAdjust);
-            SmartDashboard.putNumber("tx",tx);
             if (tx < 3.0){ aimCommand.setBoolean(true); } else { aimCommand.setBoolean(false); }
+            //auto shoot
+            if (autonomous && aimCommand.getBoolean(false) == true){
+                System.out.println("shooting imaginary note");
+                //Intake.feedShooter();
+            }
         } else { // just normal drive with no rotation
-            SmartDashboard.putString("steeringadjust", "no valid TID " + sightedTID + ", " + targetTID);
             drivetrain.drive(ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
                 stickX.getAsDouble(),
                 stickY.getAsDouble(),
@@ -124,7 +136,6 @@ public class AprilTagAimCommand extends Command {
     }
     @Override
     public void end(boolean interrupted) {
-        System.out.println("interupted");
         drivetrain.drive(new ChassisSpeeds(stickX.getAsDouble(), stickY.getAsDouble(), 0));
     }
 }

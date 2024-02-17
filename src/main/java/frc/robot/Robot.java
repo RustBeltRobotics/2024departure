@@ -23,9 +23,8 @@ public class Robot extends TimedRobot {
     private RobotContainer robotContainer;
     private Command autonomousCommand;
 
-    private ShuffleboardTab matchTab = Shuffleboard.getTab("Match");
-
-    private GenericEntry timeEntry = matchTab.add("Time Left", 0.).withPosition(3, 3).withWidget(BuiltInWidgets.kTextView).getEntry();
+    private ShuffleboardTab matchTab = Shuffleboard.getTab("Competition");
+    private GenericEntry timeEntry = matchTab.add("Time Left", 0.).withWidget(BuiltInWidgets.kTextView).getEntry();
     /**
      * This function is run once when the robot is first started up and should be
      * used for any initialization code.

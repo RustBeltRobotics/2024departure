@@ -2,9 +2,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -27,6 +30,13 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class LimelightHelpers {
+
+    public static GenericEntry WAAAH = Shuffleboard.getTab("Competition")
+   .add("LL 2dPose status", false)
+   .withWidget("Boolean Box")
+   .withPosition(10, 1)
+   .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "red"))
+   .getEntry();
 
     public static class LimelightTarget_Retro {
 
@@ -397,9 +407,11 @@ public class LimelightHelpers {
     private static Pose2d toPose2D(double[] inData){
         if(inData.length < 6)
         {
-            System.err.println("Bad LL 2D Pose Data!");
+            //System.err.println("Bad LL 2D Pose Data!");
+            WAAAH.setBoolean(false);
             return new Pose2d();
         }
+        WAAAH.setBoolean(true);
         Translation2d tran2d = new Translation2d(inData[0], inData[1]);
         Rotation2d r2d = new Rotation2d(Units.degreesToRadians(inData[5]));
         return new Pose2d(tran2d, r2d);
