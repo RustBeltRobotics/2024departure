@@ -123,7 +123,7 @@ public class RobotContainer {
         return autoChooser.getSelected();
     }
     public void speedThrottle() {
-        maxSpeedFactor = driverController.getLeftTriggerAxis();
+        if(driverController.getLeftTriggerAxis() != 0){ maxSpeedFactor = driverController.getLeftTriggerAxis(); }
         maxSpeedFactor = MathUtil.clamp(maxSpeedFactor, 0.1, 1.0);
         speedometer.setValue(maxSpeedFactor);
     }
