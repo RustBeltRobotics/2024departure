@@ -27,72 +27,88 @@ public class AprilTagAimCommand extends Command {
     private double sightedTID;
     private double targetTID;
     private double targetTID2 = -1;
-    private double steeringAdjust; 
+    private double steeringAdjust;
     private DoubleSupplier stickX;
     private DoubleSupplier stickY;
-    private Boolean autonomous;
-    
+    private boolean autonomous;
+
     private Optional<Alliance> alliance = DriverStation.getAlliance();
 
-    private ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
-             .getLayout("LL Aim", BuiltInLayouts.kList)
-             .withSize(2, 2);
-    private GenericEntry kP =
-      pidvals.add("kP", 0.13)
-         .getEntry();
-    private GenericEntry kI =
-      pidvals.add("kI", 0.13)
-         .getEntry();
-    private GenericEntry kD =
-      pidvals.add("kD", 0.13)
-         .getEntry();
+    static GenericEntry kP;
+    static GenericEntry kI;
+    static GenericEntry kD;
+    static GenericEntry aimCommand;
+    static GenericEntry autoAimCommand;
 
-    private GenericEntry aimCommand = Shuffleboard.getTab("Competition")
-   .add("shot threashold", false)
-   .withWidget("Boolean Box")
-   .withPosition(10, 0)
-   .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
-   .getEntry();
-    
+
+    public static double AUTO_TX;
+    public static boolean validTID = false;
+
     private final Drivetrain drivetrain;
-    //constructor for teleop
+
+    // constructor for teleop
     public AprilTagAimCommand(Drivetrain drivetrain, String target, DoubleSupplier stickX, DoubleSupplier stickY) {
         this.drivetrain = drivetrain;
         this.target = target;
         this.stickX = stickX;
         this.stickY = stickY;
-    addRequirements(drivetrain); 
+        addRequirements(drivetrain);
     }
-    //constructor for autonomous
+
+    // constructor for autonomous
     public AprilTagAimCommand(Drivetrain drivetrain, String target) {
         this.drivetrain = drivetrain;
         this.target = target;
         stickX = () -> 0;
         stickY = () -> 0;
         autonomous = true;
-        addRequirements(drivetrain); 
     }
+
+    public final static void makeShuffleboard() {
+        ShuffleboardLayout pidvals = Shuffleboard.getTab("Diag")
+                .getLayout("LL Aim", BuiltInLayouts.kList)
+                .withSize(2, 2);
+        kP = pidvals.add("kP", 0.13)
+                .getEntry();
+        kI = pidvals.add("kI", 0.13)
+                .getEntry();
+        kD = pidvals.add("kD", 0.00)
+                .getEntry();
+        aimCommand = Shuffleboard.getTab("Competition")
+                .add("shot threashold", false)
+                .withWidget("Boolean Box")
+                .withPosition(10, 0)
+                .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
+                .getEntry();
+        autoAimCommand = Shuffleboard.getTab("Competition")
+                .add("auto aiming", false)
+                .withWidget("Boolean Box")
+                .withPosition(10, 0)
+                .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
+                .getEntry();
+    }
+
     @Override
     public void execute() {
-        final PIDController steerPID = new PIDController(kP.getDouble(0.13), kI.getDouble(0.13), kD.getDouble(0.01));
-        if (alliance.isPresent()) {
-            if (alliance.get() == DriverStation.Alliance.Red) {
+        final PIDController steerPID = new PIDController(kP.getDouble(0.13), kI.getDouble(0.0), kD.getDouble(0.01));
+        if (DriverStation.getAlliance().isPresent()) {
+            if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+
                 switch (target) {
-                case "speaker":
-                    targetTID = 3.0;
-                    targetTID2 = 4.0;
-                    break;
-                case "amp":
-                    targetTID = 5.0;
-                    break;
-                case "source":
-                    targetTID = 9.0;
-                    targetTID2 = 10.0;                    
-                    break;
+                    case "speaker":
+                        targetTID = 3.0;
+                        targetTID2 = 4.0;
+                        break;
+                    case "amp":
+                        targetTID = 5.0;
+                        break;
+                    case "source":
+                        targetTID = 9.0;
+                        targetTID2 = 10.0;
+                        break;
                 }
-            }
-        } else {//its blue
-                switch (target) {
+            } else {// its blue
+            switch (target) {
                 case "speaker":
                     targetTID = 7.0;
                     targetTID2 = 8.0;
@@ -104,36 +120,54 @@ public class AprilTagAimCommand extends Command {
                     targetTID = 1.0;
                     targetTID2 = 2.0;
                     break;
-                }
+            }
         }
-        //determine if the primary tag id matches our target tag id
+        System.out.println("april aim hi, " + (DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : "undefined") + " " + targetTID + " " + sightedTID);
+        // determine if the primary tag id matches our target tag id
         sightedTID = LimelightHelpers.getFiducialID(limelightName);
         if (sightedTID == targetTID || sightedTID == targetTID2) {
             steerPID.enableContinuousInput(0.0, 360.0);
             tx = LimelightHelpers.getTX(limelightName);
             steeringAdjust = steerPID.calculate(tx);
-            ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                stickX.getAsDouble()*speedLimit,
-                stickY.getAsDouble()*speedLimit,
-                steeringAdjust,
-                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset()));
-            
-            drivetrain.drive(ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.020));
-            if (tx < 3.0){ aimCommand.setBoolean(true); } else { aimCommand.setBoolean(false); }
-            //auto shoot
-            if (autonomous && aimCommand.getBoolean(false) == true){
+            if (autonomous) {
+                AUTO_TX = steeringAdjust;
+                validTID = true;
+                autoAimCommand.setBoolean(true);
+            } else {
+                ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                        stickX.getAsDouble() * speedLimit,
+                        stickY.getAsDouble() * speedLimit,
+                        steeringAdjust,
+                        Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset()));
+
+                drivetrain.drive(ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.020));
+            }
+            if (tx < 3.0) {
+                aimCommand.setBoolean(true);
+            } else {
+                aimCommand.setBoolean(false);
+            }
+            // auto shoot
+            if (autonomous && aimCommand.getBoolean(false) == true) {
                 System.out.println("shooting imaginary note");
-                //Intake.feedShooter();
+                // Intake.feedShooter();
             }
         } else { // just normal drive with no rotation
+            if (autonomous) {
+                validTID = false;
+                autoAimCommand.setBoolean(false);
+            } else {
             drivetrain.drive(ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(
-                stickX.getAsDouble(),
-                stickY.getAsDouble(),
-                0,
-                Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())), 0.020));
-                aimCommand.setBoolean(false);
+                    stickX.getAsDouble(),
+                    stickY.getAsDouble(),
+                    0,
+                    Rotation2d.fromDegrees(drivetrain.getGyroscopeAngle() + drivetrain.getGyroOffset())), 0.020));
+            aimCommand.setBoolean(false);
+            }
         }
     }
+    }
+
     @Override
     public void end(boolean interrupted) {
         drivetrain.drive(new ChassisSpeeds(stickX.getAsDouble(), stickY.getAsDouble(), 0));

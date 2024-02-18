@@ -55,6 +55,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
+import frc.robot.commands.AprilTagAimCommand;
 
 public class Drivetrain extends SubsystemBase {
     private String theMove;
@@ -123,6 +124,10 @@ public class Drivetrain extends SubsystemBase {
         .withPosition(3, 0)
         .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
         .getEntry();
+    private final GenericEntry odometry = Shuffleboard.getTab("Competition")
+        .add("Odometry", "")
+        .withPosition(4, 1)
+        .getEntry();
 
     //networktables publisher for advantagescope swerve visualization
     private final StructArrayPublisher<SwerveModuleState> statePublisher;
@@ -141,7 +146,7 @@ public class Drivetrain extends SubsystemBase {
                 this::getPose, // Robot pose supplier
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
                 this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                this::drive, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+                this::autoDrive, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
                 new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
                         new PIDConstants(translation_P, translation_I, translation_D), // Translation PID constants
                         new PIDConstants(rotation_P, rotation_I, rotation_D), // Rotation PID constants
@@ -292,6 +297,13 @@ public class Drivetrain extends SubsystemBase {
     public void drive(ChassisSpeeds chassisSpeeds) {
         this.chassisSpeeds = chassisSpeeds;
     }
+    public void autoDrive(ChassisSpeeds chassisSpeeds) {
+        if (AprilTagAimCommand.validTID){
+            this.chassisSpeeds = new ChassisSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, AprilTagAimCommand.AUTO_TX);
+        } else { 
+            this.chassisSpeeds = chassisSpeeds; 
+        }
+    }
 
     /**
      * This method is run every 20 ms.
@@ -333,7 +345,7 @@ public class Drivetrain extends SubsystemBase {
                 FREntry.setBoolean(false); 
                 break;
             case "FR":
-                states = KINEMATICS.toSwerveModuleStates(chassisSpeeds, new Translation2d(Constants.DRIVETRAIN_TRACKWIDTH_METERS / 2., Constants.DRIVETRAIN_WHEELBASE_METERS / 2.));
+                states = KINEMATICS.toSwerveModuleStates(chassisSpeeds, new Translation2d(Constants.DRIVETRAIN_TRACKWIDTH_METERS / 2., -Constants.DRIVETRAIN_WHEELBASE_METERS / 2.));
                 defaultEntry.setBoolean(false);
                 FLEntry.setBoolean(false);
                 FREntry.setBoolean(true); 
@@ -381,5 +393,7 @@ public class Drivetrain extends SubsystemBase {
         });
 
         posePublisher.set(poseEstimator.getEstimatedPosition());
+
+        odometry.setString(getPose().toString());
     }
 }

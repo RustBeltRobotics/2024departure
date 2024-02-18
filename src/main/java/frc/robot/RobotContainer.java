@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.commands.AprilTagAimCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.commands.RobotOrientedDriveCommand;
@@ -49,7 +50,7 @@ public class RobotContainer {
     private double maxSpeedFactor = .2;
 
     private ShuffleboardTab comp = Shuffleboard.getTab("Competition");
-    private GenericEntry speedometer = comp.add("Speed Limit", 0.0).withWidget(BuiltInWidgets.kNumberBar).withProperties(Map.of("min", 0, "max", 1)).withPosition(0, 5).getEntry();
+    private GenericEntry speedometer = comp.add("Speed Limit", 0.0).withWidget(BuiltInWidgets.kNumberBar).withProperties(Map.of("min", 0, "max", 1)).withPosition(0, 4).getEntry();
 
     public static SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
@@ -68,6 +69,8 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor,
                 () -> -modifyAxis(driverController.getRightX()) * MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
                         * maxSpeedFactor));
+
+        AprilTagAimCommand.makeShuffleboard();
 
         //register april aim with pathplanner, passing 0,0 as stick suppliers and targeting speaker
         NamedCommands.registerCommand("AprilTagAim", new AprilTagAimCommand(drivetrain, "speaker"));
@@ -92,7 +95,7 @@ public class RobotContainer {
                 () -> -modifyAxis(driverController.getLeftX()) * MAX_VELOCITY_METERS_PER_SECOND * maxSpeedFactor));
         // Pressing the Right Bumper shifts to high speed
         // new Trigger(driverController::getRightBumper).onTrue(new InstantCommand(() -> speedUp()));
-        new Trigger(driverController::getRightBumperPressed).whileTrue(new InstantCommand(() -> speedThrottle())); //new experimental throttle speed system, faster and smoother speed modulation
+        new Trigger(driverController::getRightBumper).whileTrue(new RunCommand(() -> speedThrottle())); //new experimental throttle speed system, faster and smoother speed modulation
         // Pressing the Left Bumper shifts to low speed
         new Trigger(driverController::getLeftBumper).onTrue(new InstantCommand(() -> speedDown()));
         new Trigger(driverController::getXButton).toggleOnTrue(new RobotOrientedDriveCommand(drivetrain,
@@ -106,7 +109,7 @@ public class RobotContainer {
     }
     public void configureAutos() {
         autoChooser = AutoBuilder.buildAutoChooser();
-        comp.add("Auto Chooser", autoChooser);
+        comp.add("Auto Chooser", autoChooser).withPosition(6, 0);
     }
 
     /**
@@ -123,9 +126,10 @@ public class RobotContainer {
         return autoChooser.getSelected();
     }
     public void speedThrottle() {
-        if(driverController.getLeftTriggerAxis() != 0){ maxSpeedFactor = driverController.getLeftTriggerAxis(); }
+        System.out.println(driverController.getRightTriggerAxis());
+        if(driverController.getRightTriggerAxis() != 0){ maxSpeedFactor = driverController.getRightTriggerAxis(); 
         maxSpeedFactor = MathUtil.clamp(maxSpeedFactor, 0.1, 1.0);
-        speedometer.setValue(maxSpeedFactor);
+        speedometer.setValue(maxSpeedFactor); }
     }
     public void speedMax() {
         maxSpeedFactor = 1;

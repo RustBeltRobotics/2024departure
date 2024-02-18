@@ -36,8 +36,40 @@
         "y": 6.195916338569843
       },
       "prevControl": {
-        "x": 2.905445429203057,
-        "y": 5.677145412362651
+        "x": 2.91116420564507,
+        "y": 5.677176011257365
+      },
+      "nextControl": {
+        "x": 2.896585965190279,
+        "y": 7.019192622100841
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.9784985074557304,
+        "y": 6.195916338569843
+      },
+      "prevControl": {
+        "x": 3.977752463559259,
+        "y": 7.005638420613808
+      },
+      "nextControl": {
+        "x": 3.979638524070626,
+        "y": 4.95859420331226
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.9784985074557304,
+        "y": 4.926600188636158
+      },
+      "prevControl": {
+        "x": 3.9661421983394427,
+        "y": 6.191209587121009
       },
       "nextControl": null,
       "isLocked": false,
@@ -49,7 +81,7 @@
   "eventMarkers": [
     {
       "name": "ATAIM",
-      "waypointRelativePos": 2.0,
+      "waypointRelativePos": 0.65,
       "command": {
         "type": "parallel",
         "data": {
@@ -89,7 +121,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 1.0,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0
@@ -105,5 +137,5 @@
     "rotation": 0,
     "velocity": 0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
