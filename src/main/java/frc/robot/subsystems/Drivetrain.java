@@ -50,8 +50,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
@@ -87,10 +89,11 @@ public class Drivetrain extends SubsystemBase {
 
 
     //The Shuffle
+    ShuffleboardTab comp = Shuffleboard.getTab("Competition");
     ShuffleboardLayout drivetrainLayout = Shuffleboard.getTab("Competition")
     .getLayout("Drivetrain", BuiltInLayouts.kList)
-    .withSize(2,3)
-    .withPosition(1,1);
+    .withSize(1,2)
+    .withPosition(0,2);
     private final GenericEntry FRA =
         drivetrainLayout.add("Front Left Absolute", 0)
         .getEntry();
@@ -104,10 +107,12 @@ public class Drivetrain extends SubsystemBase {
         drivetrainLayout.add("Back Right Absolute", 0)
         .getEntry();
     private final GenericEntry Gyro =
-        drivetrainLayout.add("Gryoscope Angle", 0)
+        comp.add("Gryoscope Angle", 0)
+        .withWidget(BuiltInWidgets.kGyro)
+        .withPosition(1, 3)
         .getEntry();
     private final GenericEntry defaultEntry = Shuffleboard.getTab("Competition")
-        .add("default", false)
+        .add("Center", false)
         .withWidget("Boolean Box")
         .withPosition(2, 0)
         .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
@@ -123,10 +128,6 @@ public class Drivetrain extends SubsystemBase {
         .withWidget("Boolean Box")
         .withPosition(3, 0)
         .withProperties(Map.of("colorWhenTrue", "orange", "colorWhenFalse", "grey"))
-        .getEntry();
-    private final GenericEntry odometry = Shuffleboard.getTab("Competition")
-        .add("Odometry", "")
-        .withPosition(4, 1)
         .getEntry();
 
     //networktables publisher for advantagescope swerve visualization
@@ -393,7 +394,5 @@ public class Drivetrain extends SubsystemBase {
         });
 
         posePublisher.set(poseEstimator.getEstimatedPosition());
-
-        odometry.setString(getPose().toString());
     }
 }

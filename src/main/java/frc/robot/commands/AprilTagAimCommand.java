@@ -4,7 +4,6 @@ import static frc.robot.Constants.limelightName;
 import static frc.robot.Constants.speedLimit;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -12,7 +11,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
@@ -31,8 +29,6 @@ public class AprilTagAimCommand extends Command {
     private DoubleSupplier stickX;
     private DoubleSupplier stickY;
     private boolean autonomous;
-
-    private Optional<Alliance> alliance = DriverStation.getAlliance();
 
     static GenericEntry kP;
     static GenericEntry kI;
@@ -83,7 +79,7 @@ public class AprilTagAimCommand extends Command {
         autoAimCommand = Shuffleboard.getTab("Competition")
                 .add("auto aiming", false)
                 .withWidget("Boolean Box")
-                .withPosition(10, 0)
+                .withPosition(10, 2)
                 .withProperties(Map.of("colorWhenTrue", "lime", "colorWhenFalse", "gray"))
                 .getEntry();
     }
@@ -122,7 +118,6 @@ public class AprilTagAimCommand extends Command {
                     break;
             }
         }
-        System.out.println("april aim hi, " + (DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get() : "undefined") + " " + targetTID + " " + sightedTID);
         // determine if the primary tag id matches our target tag id
         sightedTID = LimelightHelpers.getFiducialID(limelightName);
         if (sightedTID == targetTID || sightedTID == targetTID2) {

@@ -1,9 +1,12 @@
 package frc.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.VideoSource;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -50,7 +53,18 @@ public class RobotContainer {
     private double maxSpeedFactor = .2;
 
     private ShuffleboardTab comp = Shuffleboard.getTab("Competition");
-    private GenericEntry speedometer = comp.add("Speed Limit", 0.0).withWidget(BuiltInWidgets.kNumberBar).withProperties(Map.of("min", 0, "max", 1)).withPosition(0, 4).getEntry();
+    private GenericEntry speedometer = comp.add("Speed Limit", 0.0)
+    .withWidget(BuiltInWidgets.kDial)
+    .withProperties(Map.of("min", 0, "max", 1))
+    .withPosition(1, 1)
+    .withSize(2, 2)
+    .getEntry();
+    private ComplexWidget webcamWidget = comp.addCamera("Webcam", "webcam0","10.4.24.2")
+    .withPosition(3, 1)
+    .withSize(4, 4);
+    private ComplexWidget limeLightWidget = comp.addCamera("LimeLight", "limelight","10.4.24.2")
+    .withPosition(7, 1)
+    .withSize(3, 4);
 
     public static SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
@@ -109,7 +123,7 @@ public class RobotContainer {
     }
     public void configureAutos() {
         autoChooser = AutoBuilder.buildAutoChooser();
-        comp.add("Auto Chooser", autoChooser).withPosition(6, 0);
+        comp.add("Auto Chooser", autoChooser).withPosition(0, 4);
     }
 
     /**
