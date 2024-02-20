@@ -1,2 +1,2 @@
-# 2024Crescendo
-FRC 424 Rust Belt Robotics robot for for the 2024 game, CRESCENDO
+# 2024Departure
+we love departure, but not anymore :)
