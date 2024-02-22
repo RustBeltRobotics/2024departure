@@ -5,6 +5,7 @@ import edu.wpi.first.cscore.VideoSource;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.ComplexWidget;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -67,6 +68,7 @@ public class RobotContainer {
     .withSize(3, 4);
 
     public static SendableChooser<Command> autoChooser = new SendableChooser<Command>();
+    private static EventLoop triggerEventLoop = new EventLoop();
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -120,6 +122,7 @@ public class RobotContainer {
         new Trigger(dpadUpButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("default")));
         new Trigger(dpadLeftButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("FL")));
         new Trigger(dpadRightButton::getAsBoolean).onTrue(new InstantCommand(() -> drivetrain.setMoves("FR")));
+        driverController.leftTrigger(triggerEventLoop).ifHigh(() -> speedDown());
     }
     public void configureAutos() {
         autoChooser = AutoBuilder.buildAutoChooser();
