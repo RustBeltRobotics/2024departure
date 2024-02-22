@@ -163,4 +163,5 @@ public class RobotContainer {
         maxSpeedFactor = MathUtil.clamp(maxSpeedFactor, .1, 1.);
         speedometer.setValue(maxSpeedFactor);
     }
+    public static void pollEventLoop() { triggerEventLoop.poll(); }
 }
